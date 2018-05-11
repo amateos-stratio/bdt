@@ -1938,8 +1938,12 @@ public class CommonG {
         this.previousLdapResults = Optional.of(result);
     }
 
-    //Method to convert one json to yaml file - backup&restore functionality
-    public String asYaml(String jsonStringFile) throws JsonProcessingException, IOException {
+    /**
+     * Method to convert one json to yaml file - backup&restore functionality
+     *
+     * File will be placed on path /target/test-classes
+     */
+    public String asYaml(String jsonStringFile) throws JsonProcessingException, IOException, FileNotFoundException {
 
         InputStream stream = getClass().getClassLoader().getResourceAsStream(jsonStringFile);
 
@@ -1949,7 +1953,7 @@ public class CommonG {
 
         if (stream == null) {
             this.getLogger().error("File does not exist: {}", jsonStringFile);
-            return "ERR! File not found: " + jsonStringFile;
+            throw new FileNotFoundException("ERR! File not found: " + jsonStringFile);
         }
 
         try {

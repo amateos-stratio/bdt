@@ -876,6 +876,11 @@ public class WhenGSpec extends BaseGSpec {
         this.commonspec.setPreviousLdapResults(commonspec.getLdapUtils().search(new SearchRequest(baseDn, filter)));
     }
 
+    /**
+     * Method to convert one json to yaml file - backup&restore functionality
+     *
+     * File will be placed on path /target/test-classes
+     */
     @When("^I convert the json file '(.+?)' to yaml file '(.+?)'$")
     public void convertJsonToYaml(String fileToConvert, String fileName) throws Exception {
 
@@ -892,6 +897,7 @@ public class WhenGSpec extends BaseGSpec {
             out.write(retrievedData);
         } catch (Exception e) {
             commonspec.getLogger().error("Custom file {} hasn't been created:\n{}", absolutePathFile, e.toString());
+            throw new RuntimeException("Custom file {} hasn't been created");
         } finally {
             out.close();
         }
