@@ -25,11 +25,9 @@ import com.stratio.qa.utils.RemoteSSHConnection;
 import com.stratio.qa.utils.ThreadProperty;
 import cucumber.api.DataTable;
 import cucumber.api.java.en.Given;
-import cucumber.api.java.en.When;
 import org.assertj.core.api.Assertions;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.ldaptive.SearchRequest;
 import org.openqa.selenium.WebElement;
 
 import java.io.File;
@@ -46,6 +44,7 @@ import static com.stratio.qa.assertions.Assertions.assertThat;
 
 /**
  * Generic Given Specs.
+ *
  * @see <a href="GivenGSpec-annotations.html">Given Steps &amp; Matching Regex</a>
  */
 public class GivenGSpec extends BaseGSpec {
@@ -120,13 +119,13 @@ public class GivenGSpec extends BaseGSpec {
     /**
      * Connect to ElasticSearch using custom parameters
      *
-     * @param host ES host
-     * @param foo regex needed to match method
-     * @param nativePort ES port
-     * @param bar regex needed to match method
+     * @param host        ES host
+     * @param foo         regex needed to match method
+     * @param nativePort  ES port
+     * @param bar         regex needed to match method
      * @param clusterName ES clustername
-     * @throws DBException exception
-     * @throws UnknownHostException exception
+     * @throws DBException           exception
+     * @throws UnknownHostException  exception
      * @throws NumberFormatException exception
      */
     @Given("^I connect to Elasticsearch cluster at host '(.+?)'( using native port '(.+?)')?( using cluster name '(.+?)')?$")
@@ -150,9 +149,9 @@ public class GivenGSpec extends BaseGSpec {
     /**
      * Create table
      *
-     * @param table Cassandra table
+     * @param table     Cassandra table
      * @param datatable datatable used for parsing elements
-     * @param keyspace Cassandra keyspace
+     * @param keyspace  Cassandra keyspace
      */
     @Given("^I create a Cassandra table named '(.+?)' using keyspace '(.+?)' with:$")
     public void createTableWithData(String table, String keyspace, DataTable datatable) {
@@ -183,9 +182,9 @@ public class GivenGSpec extends BaseGSpec {
     /**
      * Insert Data
      *
-     * @param table Cassandra table
+     * @param table     Cassandra table
      * @param datatable datatable used for parsing elements
-     * @param keyspace Cassandra keyspace
+     * @param keyspace  Cassandra keyspace
      */
     @Given("^I insert in keyspace '(.+?)' and table '(.+?)' with:$")
     public void insertData(String keyspace, String table, DataTable datatable) {
@@ -223,14 +222,14 @@ public class GivenGSpec extends BaseGSpec {
      * @param position position from a search result
      * @param element  key in the json response to be saved
      * @param envVar   thread environment variable where to store the value
-     * @throws IllegalAccessException exception
-     * @throws IllegalArgumentException exception
-     * @throws SecurityException exception
-     * @throws NoSuchFieldException exception
-     * @throws ClassNotFoundException exception
-     * @throws InstantiationException exception
+     * @throws IllegalAccessException    exception
+     * @throws IllegalArgumentException  exception
+     * @throws SecurityException         exception
+     * @throws NoSuchFieldException      exception
+     * @throws ClassNotFoundException    exception
+     * @throws InstantiationException    exception
      * @throws InvocationTargetException exception
-     * @throws NoSuchMethodException exception
+     * @throws NoSuchMethodException     exception
      */
     @Given("^I save element (in position \'(.+?)\' in )?\'(.+?)\' in environment variable \'(.+?)\'$")
     public void saveElementEnvironment(String foo, String position, String element, String envVar) throws Exception {
@@ -272,14 +271,14 @@ public class GivenGSpec extends BaseGSpec {
      * @param host   elasticsearch connection
      * @param port   elasticsearch port
      * @param envVar thread variable where to store the value
-     * @throws IllegalAccessException exception
-     * @throws IllegalArgumentException exception
-     * @throws SecurityException exception
-     * @throws NoSuchFieldException exception
-     * @throws ClassNotFoundException exception
-     * @throws InstantiationException exception
+     * @throws IllegalAccessException    exception
+     * @throws IllegalArgumentException  exception
+     * @throws SecurityException         exception
+     * @throws NoSuchFieldException      exception
+     * @throws ClassNotFoundException    exception
+     * @throws InstantiationException    exception
      * @throws InvocationTargetException exception
-     * @throws NoSuchMethodException exception
+     * @throws NoSuchMethodException     exception
      */
     @Given("^I obtain elasticsearch cluster name in '([^:]+?)(:.+?)?' and save it in variable '(.+?)'?$")
     public void saveElasticCluster(String host, String port, String envVar) throws Exception {
@@ -360,8 +359,8 @@ public class GivenGSpec extends BaseGSpec {
      * Insert data in a MongoDB table.
      *
      * @param dataBase Mongo database
-     * @param tabName Mongo table
-     * @param table Datatable used for insert elements
+     * @param tabName  Mongo table
+     * @param table    Datatable used for insert elements
      */
     @Given("^I insert into a MongoDB database '(.+?)' and table '(.+?)' this values:$")
     public void insertOnMongoTable(String dataBase, String tabName, DataTable table) {
@@ -373,7 +372,7 @@ public class GivenGSpec extends BaseGSpec {
      * Truncate table in MongoDB.
      *
      * @param database Mongo database
-     * @param table Mongo table
+     * @param table    Mongo table
      */
     @Given("^I drop every document at a MongoDB database '(.+?)' and table '(.+?)'")
     public void truncateTableInMongo(String database, String table) {
@@ -449,7 +448,7 @@ public class GivenGSpec extends BaseGSpec {
         }
 
         if (restPort == null) {
-            if (isSecured == null)  {
+            if (isSecured == null) {
                 restPort = ":80";
             } else {
                 restPort = ":443";
@@ -487,7 +486,7 @@ public class GivenGSpec extends BaseGSpec {
      *
      * @param idframe iframe to swith to
      * @throws IllegalAccessException exception
-     * @throws NoSuchFieldException exception
+     * @throws NoSuchFieldException   exception
      * @throws ClassNotFoundException exception
      */
     @Given("^I switch to iframe with '([^:]*?):(.+?)'$")
@@ -522,11 +521,10 @@ public class GivenGSpec extends BaseGSpec {
      * Opens a ssh connection to remote host
      *
      * @param remoteHost remote host
-     * @param user remote user
-     * @param password (required if pemFile null)
-     * @param pemFile (required if password null)
+     * @param user       remote user
+     * @param password   (required if pemFile null)
+     * @param pemFile    (required if password null)
      * @throws Exception exception
-     *
      */
     @Given("^I open a ssh connection to '(.+?)'( in port '(.+?)')? with user '(.+?)'( and password '(.+?)')?( using pem file '(.+?)')?$")
     public void openSSHConnection(String remoteHost, String tmp, String remotePort, String user, String foo, String password, String bar, String pemFile) throws Exception {
@@ -548,17 +546,15 @@ public class GivenGSpec extends BaseGSpec {
 
 
     /**
-    * Authenticate in a DCOS cluster
-    *
-    * @param remoteHost remote host
-    * @param email email for JWT singing
-    * @param user remote user
-    * @param password (required if pemFile null)
-    * @param pemFile (required if password null)
-    * @throws Exception exception
-    *
-    *
-    */
+     * Authenticate in a DCOS cluster
+     *
+     * @param remoteHost remote host
+     * @param email      email for JWT singing
+     * @param user       remote user
+     * @param password   (required if pemFile null)
+     * @param pemFile    (required if password null)
+     * @throws Exception exception
+     */
     @Given("^I authenticate to DCOS cluster '(.+?)' using email '(.+?)'( with user '(.+?)'( and password '(.+?)'| and pem file '(.+?)'))?$")
     public void authenticateDCOSpem(String remoteHost, String email, String foo, String user, String bar, String password, String pemFile) throws Exception {
         String DCOSsecret;
@@ -585,7 +581,8 @@ public class GivenGSpec extends BaseGSpec {
 
     /**
      * Generate token to authenticate in gosec SSO
-     * @param ssoHost current sso host
+     *
+     * @param ssoHost  current sso host
      * @param userName username
      * @param passWord password
      * @throws Exception exception
@@ -631,7 +628,7 @@ public class GivenGSpec extends BaseGSpec {
      * Copies file/s from local system to remote system
      *
      * @param remotePath path where file is going to be copy
-     * @param localPath path where file is located
+     * @param localPath  path where file is located
      * @throws Exception exception
      */
     @Given("^I outbound copy '(.+?)' through a ssh connection to '(.+?)'$")
@@ -643,11 +640,11 @@ public class GivenGSpec extends BaseGSpec {
     /**
      * Executes the command specified in local system
      *
-     * @param command command to be run locally
-     * @param foo regex needed to match method
+     * @param command    command to be run locally
+     * @param foo        regex needed to match method
      * @param exitStatus command exit status
-     * @param bar regex needed to match method
-     * @param envVar environment variable name
+     * @param bar        regex needed to match method
+     * @param envVar     environment variable name
      * @throws Exception exception
      **/
     @Given("^I run '(.+?)' locally( with exit status '(.+?)')?( and save the value in environment variable '(.+?)')?$")
@@ -665,11 +662,11 @@ public class GivenGSpec extends BaseGSpec {
     /**
      * Executes the command specified in remote system
      *
-     * @param command command to be run locally
-     * @param foo regex needed to match method
+     * @param command    command to be run locally
+     * @param foo        regex needed to match method
      * @param exitStatus command exit status
-     * @param bar regex needed to match method
-     * @param envVar environment variable name
+     * @param bar        regex needed to match method
+     * @param envVar     environment variable name
      * @throws Exception exception
      **/
     @Given("^I run '(.+?)' in the ssh connection( with exit status '(.+?)')?( and save the value in environment variable '(.+?)')?$")
@@ -691,9 +688,9 @@ public class GivenGSpec extends BaseGSpec {
     /**
      * Insert document in a MongoDB table.
      *
-     * @param dataBase Mongo database
+     * @param dataBase   Mongo database
      * @param collection Mongo collection
-     * @param document document used for schema
+     * @param document   document used for schema
      */
     @Given("^I insert into MongoDB database '(.+?)' and collection '(.+?)' the document from schema '(.+?)'$")
     public void insertOnMongoTable(String dataBase, String collection, String document) throws Exception {
@@ -729,7 +726,6 @@ public class GivenGSpec extends BaseGSpec {
 
     /**
      * Disconnect from zookeeper.
-     *
      */
     @Given("^I disconnect from Zookeeper$")
     public void disconnectFromZk() throws InterruptedException {
@@ -754,8 +750,6 @@ public class GivenGSpec extends BaseGSpec {
 
     /**
      * Connect to LDAP.
-     *
-     *
      */
     @Given("^I connect to LDAP$")
     public void connectLDAP() {
@@ -860,10 +854,9 @@ public class GivenGSpec extends BaseGSpec {
      * Checks if there are any unused nodes in the cluster and returns the IP of one of them.
      * REQUIRES A PREVIOUSLY-ESTABLISHED SSH CONNECTION TO DCOS-CLI TO WORK
      *
-     * @param hosts: list of IPs that will be investigated
+     * @param hosts:  list of IPs that will be investigated
      * @param envVar: environment variable name
      * @throws Exception
-     *
      */
     @Given("^I save the IP of an unused node in hosts '(.+?)' in the in environment variable '(.+?)'?$")
     public void getUnusedNode(String hosts, String envVar) throws Exception {
@@ -891,7 +884,6 @@ public class GivenGSpec extends BaseGSpec {
      *
      * @param serviceList all task deployed in the cluster separated by a semicolumn.
      * @throws Exception
-     *
      */
     @Given("^services '(.*?)' are splitted correctly in datacenters$")
     public void checkServicesDistributionMultiDataCenter(String serviceList) throws Exception {
@@ -901,14 +893,14 @@ public class GivenGSpec extends BaseGSpec {
         executeCommand("rm -rf aux.txt", "foo", 0, "bar", null);
 
     }
+
     /**
      * Check if all task of a service are correctly distributed in all datacenters of the cluster
      *
-     * @param serviceList all task deployed in the cluster separated by a semicolumn.
+     * @param serviceList    all task deployed in the cluster separated by a semicolumn.
      * @param dataCentersIps all ips of the datacenters to be checked
      *                       Example: ip_1_dc1, ip_2_dc1;ip_3_dc2,ip_4_dc2
      * @throws Exception
-     *
      */
     @Given("^services '(.+?)' are splitted correctly in datacenters '(.+?)'$")
     public void checkServicesDistributionMultiDataCenterPram(String serviceList, String dataCentersIps) throws Exception {
