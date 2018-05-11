@@ -68,6 +68,11 @@ import java.util.regex.Pattern;
 import static com.stratio.qa.assertions.Assertions.assertThat;
 import static org.testng.Assert.fail;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+
 public class CommonG {
 
     private static final long DEFAULT_CURRENT_TIME = 1000L;
@@ -341,15 +346,15 @@ public class CommonG {
      * Looks for webelements inside a selenium context. This search will be made
      * by id, name and xpath expression matching an {@code locator} value
      *
-     * @param method class of element to be searched
-     * @param element webElement searched in selenium context
+     * @param method        class of element to be searched
+     * @param element       webElement searched in selenium context
      * @param expectedCount integer. Expected number of elements.
      * @return List(WebElement)
-     * @throws IllegalAccessException exception
+     * @throws IllegalAccessException   exception
      * @throws IllegalArgumentException exception
-     * @throws SecurityException exception
-     * @throws NoSuchFieldException exception
-     * @throws ClassNotFoundException exception
+     * @throws SecurityException        exception
+     * @throws NoSuchFieldException     exception
+     * @throws ClassNotFoundException   exception
      */
     public List<WebElement> locateElement(String method, String element,
                                           Integer expectedCount) throws ClassNotFoundException, NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
@@ -382,11 +387,11 @@ public class CommonG {
         return wel;
     }
 
-     /**
+    /**
      * Capture a snapshot or an evidence in the driver
      *
      * @param driver driver used for testing
-     * @param type type
+     * @param type   type
      * @return String
      */
     public String captureEvidence(WebDriver driver, String type) {
@@ -397,7 +402,7 @@ public class CommonG {
      * Capture a snapshot or an evidence in the driver
      *
      * @param driver driver used for testing
-     * @param type type
+     * @param type   type
      * @param suffix suffix
      * @return String
      */
@@ -1262,13 +1267,13 @@ public class CommonG {
      *
      * @param element attribute in class where to store the value
      * @param value   value to be stored
-     * @throws NoSuchFieldException exception
-     * @throws SecurityException exception
-     * @throws IllegalArgumentException exception
-     * @throws IllegalAccessException exception
-     * @throws InstantiationException exception
-     * @throws ClassNotFoundException exception
-     * @throws NoSuchMethodException exception
+     * @throws NoSuchFieldException      exception
+     * @throws SecurityException         exception
+     * @throws IllegalArgumentException  exception
+     * @throws IllegalAccessException    exception
+     * @throws InstantiationException    exception
+     * @throws ClassNotFoundException    exception
+     * @throws NoSuchMethodException     exception
      * @throws InvocationTargetException exception
      */
 
@@ -1916,7 +1921,8 @@ public class CommonG {
     }
 
     /**
-     *      *
+     * *
+     *
      * @return the previously searched for LDAP result
      */
     public Optional<SearchResult> getPreviousLdapResults() {
@@ -1932,5 +1938,44 @@ public class CommonG {
         this.previousLdapResults = Optional.of(result);
     }
 
+    //Method to convert one json to yaml file - backup&restore functionality
+    public String asYaml(String jsonStringFile) throws JsonProcessingException, IOException {
+
+        InputStream stream = getClass().getClassLoader().getResourceAsStream(jsonStringFile);
+
+        Writer writer = new StringWriter();
+        char[] buffer = new char[1024];
+        Reader reader;
+
+        if (stream == null) {
+            this.getLogger().error("File does not exist: {}", jsonStringFile);
+            return "ERR! File not found: " + jsonStringFile;
+        }
+
+        try {
+            reader = new BufferedReader(new InputStreamReader(stream, "UTF-8"));
+            int n;
+            while ((n = reader.read(buffer)) != -1) {
+                writer.write(buffer, 0, n);
+            }
+        } catch (Exception readerexception) {
+            this.getLogger().error(readerexception.getMessage());
+        } finally {
+            try {
+                stream.close();
+            } catch (Exception closeException) {
+                this.getLogger().error(closeException.getMessage());
+            }
+        }
+        String text = writer.toString();
+
+        String std = text.replace("\r", "").replace("\n", ""); // make sure we have unix style text regardless of the input
+
+        // parse JSON
+        JsonNode jsonNodeTree = new ObjectMapper().readTree(std);
+        // save it as YAML
+        String jsonAsYaml = new YAMLMapper().writeValueAsString(jsonNodeTree);
+        return jsonAsYaml;
+    }
 
 }

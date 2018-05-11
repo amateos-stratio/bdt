@@ -25,9 +25,11 @@ import com.stratio.qa.utils.RemoteSSHConnection;
 import com.stratio.qa.utils.ThreadProperty;
 import cucumber.api.DataTable;
 import cucumber.api.java.en.Given;
+import cucumber.api.java.en.When;
 import org.assertj.core.api.Assertions;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.ldaptive.SearchRequest;
 import org.openqa.selenium.WebElement;
 
 import java.io.File;

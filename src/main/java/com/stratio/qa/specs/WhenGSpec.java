@@ -33,6 +33,7 @@ import org.assertj.core.api.Assertions;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.hjson.JsonArray;
 import org.hjson.JsonValue;
+import org.json.JSONObject;
 import org.ldaptive.SearchRequest;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
@@ -53,6 +54,7 @@ import com.datastax.driver.core.ResultSet;
 
 /**
  * Generic When Specs.
+ *
  * @see <a href="WhenGSpec-annotations.html">When Steps &amp; Matching Regex</a>
  */
 public class WhenGSpec extends BaseGSpec {
@@ -830,6 +832,7 @@ public class WhenGSpec extends BaseGSpec {
     /**
      * Read the file passed as parameter, perform the modifications specified and save the result in the environment
      * variable passed as parameter.
+     *
      * @param baseData      file to read
      * @param type          whether the info in the file is a 'json' or a simple 'string'
      * @param envVar        name of the variable where to store the result
@@ -851,9 +854,10 @@ public class WhenGSpec extends BaseGSpec {
     /**
      * Read the file passed as parameter and save the result in the environment
      * variable passed as parameter.
-     * @param baseData      file to read
-     * @param type          whether the info in the file is a 'json' or a simple 'string'
-     * @param envVar        name of the variable where to store the result
+     *
+     * @param baseData file to read
+     * @param type     whether the info in the file is a 'json' or a simple 'string'
+     * @param envVar   name of the variable where to store the result
      */
     @When("^I read file '(.+?)' as '(.+?)' and save it in environment variable '(.+?)'$")
     public void readFileToVariableNoDataTable(String baseData, String type, String envVar) throws Exception {
@@ -866,11 +870,32 @@ public class WhenGSpec extends BaseGSpec {
 
     /**
      * Search for a LDAP object
-     *
-     *
      */
     @When("^I search in LDAP using the filter '(.+?)' and the baseDn '(.+?)'$")
     public void searchLDAP(String filter, String baseDn) throws Exception {
         this.commonspec.setPreviousLdapResults(commonspec.getLdapUtils().search(new SearchRequest(baseDn, filter)));
+    }
+
+    @When("^I convert the json file '(.+?)' to yaml file '(.+?)'$")
+    public void convertJsonToYaml(String fileToConvert, String fileName) throws Exception {
+
+        // Retrieve data
+        String retrievedData = commonspec.asYaml(fileToConvert);
+
+        // Create file (temporary) and set path to be accessible within test
+        File tempDirectory = new File(String.valueOf(System.getProperty("user.dir") + "/target/test-classes/"));
+        String absolutePathFile = tempDirectory.getAbsolutePath() + "/" + fileName;
+        commonspec.getLogger().debug("Creating file {} in 'target/test-classes'", absolutePathFile);
+        // Note that this Writer will delete the file if it exists
+        Writer out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(absolutePathFile), "UTF-8"));
+        try {
+            out.write(retrievedData);
+        } catch (Exception e) {
+            commonspec.getLogger().error("Custom file {} hasn't been created:\n{}", absolutePathFile, e.toString());
+        } finally {
+            out.close();
+        }
+
+        Assertions.assertThat(new File(absolutePathFile).isFile());
     }
 }
