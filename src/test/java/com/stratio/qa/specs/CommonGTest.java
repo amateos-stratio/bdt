@@ -17,20 +17,16 @@ package com.stratio.qa.specs;
 
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Response;
-import com.stratio.qa.utils.RemoteSSHConnection;
 import com.stratio.qa.utils.ThreadProperty;
 import cucumber.api.DataTable;
-import cucumber.runtime.table.TableConverter;
-import gherkin.formatter.model.DataTableRow;
+import org.hjson.JsonObject;
 import org.hjson.JsonValue;
 import org.hjson.ParseException;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.hjson.JsonObject;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
-import scala.xml.Null;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -41,7 +37,6 @@ import java.util.regex.Pattern;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatExceptionOfType;
 
 public class CommonGTest {
 
@@ -1231,5 +1226,16 @@ public class CommonGTest {
         assertThat(value1).as("Value for search does not match").isEqualTo("paaslab34.stratio.com");
     }
 
+    @Test
+    public void retrieveDataJsonASYaml() throws Exception {
+        ThreadProperty.set("class", this.getClass().getCanonicalName());
+        CommonG commong = new CommonG();
+        String inputData = "schemas/testCreateFile.json";
+
+        String returnedData = commong.asYaml(inputData);
+       //Checking the output file follows yaml structure, starting with --
+        assertThat(returnedData).as("Yaml file is not correct").contains("---\n" +
+                "key1: \"value1\"\n");
+    }
 
 }
