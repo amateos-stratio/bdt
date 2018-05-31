@@ -19,6 +19,10 @@ package com.stratio.qa.specs;
 import com.datastax.driver.core.ColumnDefinitions;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
@@ -35,7 +39,8 @@ import com.ning.http.client.cookie.Cookie;
 import com.stratio.qa.conditions.Conditions;
 import com.stratio.qa.utils.*;
 import cucumber.api.DataTable;
-
+import org.apache.commons.collections.IteratorUtils;
+import org.apache.commons.io.FileUtils;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.Condition;
 import org.hjson.JsonObject;
@@ -51,14 +56,15 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.collections.IteratorUtils;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.Future;
@@ -67,11 +73,6 @@ import java.util.regex.Pattern;
 
 import static com.stratio.qa.assertions.Assertions.assertThat;
 import static org.testng.Assert.fail;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
 public class CommonG {
 
@@ -1945,7 +1946,7 @@ public class CommonG {
 
     /**
      * Method to convert one json to yaml file - backup&restore functionality
-     *
+     * <p>
      * File will be placed on path /target/test-classes
      */
     public String asYaml(String jsonStringFile) throws JsonProcessingException, IOException, FileNotFoundException {
@@ -1985,6 +1986,61 @@ public class CommonG {
         // save it as YAML
         String jsonAsYaml = new YAMLMapper().writeValueAsString(jsonNodeTree);
         return jsonAsYaml;
+    }
+
+
+    /**
+     * Connect to JDBC secured/not secured database
+     *
+     * @param database database connection string
+     * @param host     database host
+     * @param port     database port
+     * @param user     database user
+     * @param password database password
+     * @param ca       database self signed certs
+     * @param crt:     database certificate
+     * @param key:     database private key
+     * @throws Exception exception     *
+     */
+    public void connectToPostgreSQLDatabase(String database, String host, String port, String user, String password, Boolean secure, String ca, String crt, String key) throws SQLException {
+
+        Connection myConnection = null;
+
+        if (port.startsWith("[")) {
+            port = port.substring(1, port.length() - 1);
+        }
+        if (!secure) {
+            if (password == null) {
+                password = "stratio";
+            }
+            try {
+                myConnection = DriverManager.getConnection("jdbc:postgresql://" + host + ":" + port + "/" + database, user, password);
+            } catch (SQLException se) {
+                // log the exception
+                this.getLogger().error(se.getMessage());
+                // re-throw the exception
+                throw se;
+            }
+
+        } else {
+            Properties props = new Properties();
+            props.setProperty("user", user);
+            props.setProperty("ssl", "true");
+            props.setProperty("sslmode", "verify-full");
+            props.setProperty("sslcert", crt);
+            props.setProperty("sslkey", key);
+            props.setProperty("sslrootcert", ca);
+
+            try {
+                myConnection = DriverManager.getConnection("jdbc:postgresql://" + host + ":" + port + "/" + database, props);
+            } catch (SQLException se) {
+                // log the exception
+                this.getLogger().error(se.getMessage());
+                // re-throw the exception
+                throw se;
+            }
+
+        }
     }
 
 }

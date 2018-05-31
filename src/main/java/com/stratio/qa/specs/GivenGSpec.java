@@ -38,8 +38,6 @@ import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang3.StringUtils;
-
 import static com.stratio.qa.assertions.Assertions.assertThat;
 
 /**
@@ -963,18 +961,16 @@ public class GivenGSpec extends BaseGSpec {
     /**
      * Get info about secrets according input parameter
      *
-     * @param type what type of info (cert, key, ca, principal or keytab)
-     * @param path path where get info
-     * @param value value inside path
-     * @param token vault value
+     * @param type       what type of info (cert, key, ca, principal or keytab)
+     * @param path       path where get info
+     * @param value      value inside path
+     * @param token      vault value
      * @param isUnsecure vault by http instead of https
-     * @param host gosec machine IP
-     * @param contains regex needed to match method
+     * @param host       gosec machine IP
+     * @param contains   regex needed to match method
      * @param exitStatus command exit status
-     * @param envVar: environment variable name
-     *
+     * @param envVar:    environment variable name
      * @throws Exception exception     *
-     *
      */
     @Given("^I get '(.+?)' from path '(.+?)' for value '(.+?)' with token '(.+?)',( unsecure)? vault host '(.+?)'( with exit status '(.+?)')? and save the value in environment variable '(.+?)'$")
     public void getSecretInfo(String type, String path, String value, String token, String isUnsecure, String host, String contains, Integer exitStatus, String envVar) throws Exception {
@@ -1032,6 +1028,40 @@ public class GivenGSpec extends BaseGSpec {
                 break;
         }
 
+    }
+
+    /**
+     * Connect to JDBC secured/not secured database
+     *
+     * @param isSecured if the database is secured (TLS) or not
+     * @param database  database connection string
+     * @param host      database host
+     * @param port      database port
+     * @param user      database user
+     * @param password  database password
+     * @param ca        database self signed certs
+     * @param crt:      database certificate
+     * @param key:      database private key
+     * @throws Exception exception     *
+     */
+    @Given("^I( securely)? connect with JDBC to database Postgres '(.+?)' on host '(.+?)' and port '(.+?)' with user '(.+?)'( and password '(.+?)')?( and root ca '(.+?)')?(, crt '(.+?)')?( and key '(.+?)' certificates)?$")
+    public void connectDatabasePostgres(String isSecured, String database, String host, String port, String user, String foo, String password, String foo1, String ca, String foo2, String crt, String foo3, String key) throws Exception {
+        this.commonspec.getExceptions().clear();
+        if (isSecured != null) {
+            commonspec.getLogger().debug("opening secure database");
+            try {
+                this.commonspec.connectToPostgreSQLDatabase(database, host, port, user, password, true, ca, crt, key);
+            } catch (Exception e) {
+                this.commonspec.getExceptions().add(e);
+            }
+        } else {
+            commonspec.getLogger().debug("opening database");
+            try {
+                this.commonspec.connectToPostgreSQLDatabase(database, host, port, user, password, false, ca, crt, key);
+            } catch (Exception e) {
+                this.commonspec.getExceptions().add(e);
+            }
+        }
     }
 
 }
