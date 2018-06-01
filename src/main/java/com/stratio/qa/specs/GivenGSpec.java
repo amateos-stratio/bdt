@@ -1044,7 +1044,7 @@ public class GivenGSpec extends BaseGSpec {
      * @param key:      database private key
      * @throws Exception exception     *
      */
-    @Given("^I( securely)? connect with JDBC to database Postgres '(.+?)' on host '(.+?)' and port '(.+?)' with user '(.+?)'( and password '(.+?)')?( and root ca '(.+?)')?(, crt '(.+?)')?( and key '(.+?)' certificates)?$")
+    @Given("^I( securely)? connect with JDBC to database '(.+?)' on host '(.+?)' and port '(.+?)' with user '(.+?)'( and password '(.+?)')?( and root ca '(.+?)')?(, crt '(.+?)')?( and key '(.+?)' certificates)?$")
     public void connectDatabasePostgres(String isSecured, String database, String host, String port, String user, String foo, String password, String foo1, String ca, String foo2, String crt, String foo3, String key) throws Exception {
         this.commonspec.getExceptions().clear();
         if (isSecured != null) {

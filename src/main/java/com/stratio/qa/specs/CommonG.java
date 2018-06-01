@@ -1997,9 +1997,9 @@ public class CommonG {
      * @param port     database port
      * @param user     database user
      * @param password database password
-     * @param ca       database self signed certs
-     * @param crt:     database certificate
-     * @param key:     database private key
+     * @param ca       trusted certificate authorities (.crt)
+     * @param crt:     server certificate
+     * @param key:     server private key
      * @throws Exception exception     *
      */
     public void connectToPostgreSQLDatabase(String database, String host, String port, String user, String password, Boolean secure, String ca, String crt, String key) throws SQLException {
@@ -2024,12 +2024,25 @@ public class CommonG {
 
         } else {
             Properties props = new Properties();
-            props.setProperty("user", user);
+            if (user != null) {
+                props.setProperty("user", user);
+            }
+            if (password != null) {
+                props.setProperty("password", user);
+            }
+            if (ca != null) {
+                props.setProperty("sslrootcert", ca);
+            }
+            if (crt != null) {
+                props.setProperty("sslcert", crt);
+            }
+            if (key != null) {
+                props.setProperty("sslkey", key);
+            }
+
             props.setProperty("ssl", "true");
             props.setProperty("sslmode", "verify-full");
-            props.setProperty("sslcert", crt);
-            props.setProperty("sslkey", key);
-            props.setProperty("sslrootcert", ca);
+
 
             try {
                 myConnection = DriverManager.getConnection("jdbc:postgresql://" + host + ":" + port + "/" + database, props);
