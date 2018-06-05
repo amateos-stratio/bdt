@@ -42,6 +42,9 @@ import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.Select;
 
 import java.io.*;
+import java.sql.Connection;
+import java.sql.ResultSetMetaData;
+import java.sql.Statement;
 import java.sql.Time;
 import java.util.*;
 import java.util.concurrent.Future;
@@ -940,5 +943,71 @@ public class WhenGSpec extends BaseGSpec {
         }
 
         Assertions.assertThat(new File(absolutePathFile).isFile());
+    }
+
+    /*
+     * @param query
+     * executes query in database
+     *
+     *
+     */
+    @When("^I execute query '(.+?)'$")
+    public void executeQuery(String query) throws Exception{
+        Statement myStatement = null;
+        int result = 0;
+        Connection myConnection = this.commonspec.getConnection();
+
+        try {
+            myStatement = myConnection.createStatement();
+            result = myStatement.executeUpdate(query);
+            myStatement.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            assertThat(result).as(e.getClass().getName() + ": " + e.getMessage()).isNotEqualTo(0);
+        }
+    }
+
+    /*
+     * @param query
+     * selects data from database
+     * and sends it to environment variable
+     *
+     */
+    @When("^I query the database with '(.+?)'$")
+    public void selectData(String query) throws Exception{
+        Statement myStatement = null;
+        //postgres table
+        List<String> sqlTable =  new ArrayList<String>();
+        List<String> sqlTableAux =  new ArrayList<String>();
+        Connection myConnection = this.commonspec.getConnection();
+        java.sql.ResultSet rs = null;
+        try {
+            myStatement = myConnection.createStatement();
+            rs = myStatement.executeQuery(query);
+            //column names
+            ResultSetMetaData resultSetMetaData = rs.getMetaData();
+            int count = resultSetMetaData.getColumnCount();
+            for (int i = 1; i <= count; i++) {
+                sqlTable.add(resultSetMetaData.getColumnName(i).toString());
+            }
+            //takes column names and culumn count
+            while (rs.next()) {
+                for (int i = 1; i <= count; i++) {
+                    //aux list without column names
+                    sqlTableAux.add(rs.getObject(i).toString());
+                }
+            }
+            sqlTable.addAll(sqlTableAux);
+
+            //sends raws to environment variable
+            for (int i = 0; i<sqlTable.size(); i++) {
+                ThreadProperty.set("queryresponse"+i, sqlTable.get(i));
+            }
+            rs.close();
+            myStatement.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            Assertions.assertThat(rs).as("There are no response from SELECT").isNotNull();
+        }
     }
 }

@@ -35,6 +35,9 @@ import org.json.JSONArray;
 import org.ldaptive.LdapAttribute;
 import org.openqa.selenium.WebElement;
 
+import java.sql.Connection;
+import java.sql.ResultSetMetaData;
+import java.sql.Statement;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -831,8 +834,155 @@ public class ThenGSpec extends BaseGSpec {
         } else {
             fail("No previous LDAP results were stored in memory");
         }
+    }
+
+    /*
+     * @param table
+     * checks table existence
+     *
+     */
+    @Then("^table '(.+?)' exists$")
+    public void checkTable(String tableName) throws Exception {
+        Statement myStatement = null;
+        Connection myConnection = this.commonspec.getConnection();
+
+        //query checks table existence, existence table name in system table  pg_tables
+        String query = "SELECT * FROM pg_tables WHERE tablename = " + "\'" + tableName + "\'" + ";";
+        try {
+            myStatement = myConnection.createStatement();
+            java.sql.ResultSet rs = myStatement.executeQuery(query);
+            //if there are no data row
+            if (rs.next() == false) {
+                Assertions.assertThat(rs.next()).as("there are no table " + tableName).isTrue();
+            } else {
+                //data exist
+                String resultTableName = rs.getString(2);
+                assertThat(resultTableName).as("there are incorrect table name " + tableName).contains(tableName);
+            }
+            rs.close();
+            myStatement.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
 
 
+    /*
+     * @param table
+     * checks table existence negative case
+     *
+     */
+    @Then("^table '(.+?)' doesn't exists$")
+    public void checkTableFalse(String tableName) throws Exception {
+        Statement myStatement = null;
+        Connection myConnection = this.commonspec.getConnection();
+
+        String query = "SELECT * FROM pg_tables WHERE tablename = " + "\'" + tableName + "\'" + ";";
+        try {
+            myStatement = myConnection.createStatement();
+            java.sql.ResultSet rs = myStatement.executeQuery(query);
+            //if there are no data row, table doesn't exists
+            if (rs.next() == false) {
+                Assertions.assertThat(rs.next()).as("table exists " + tableName).isFalse();
+            } else {
+                String resultTableName = rs.getString(2);
+                assertThat(resultTableName).as("table exists " + tableName).isEqualToIgnoringCase(tableName);
+            }
+            rs.close();
+            myStatement.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    /*
+     * @param tableName
+     * @param dataTable
+     * compares two tables: pattern table and the result from remote database
+     * by default: order by id
+     *
+     */
+    @Then("^I check that table '(.+?)' is iqual to$")
+    public void comparetable(String tableName, DataTable dataTable) throws Exception {
+        Statement myStatement = null;
+        java.sql.ResultSet rs = null;
+
+        //from postgres table
+        List<String> sqlTable =  new ArrayList<String>();
+        List<String> sqlTableAux =  new ArrayList<String>();
+        //from Cucumber Datatable
+        List<String> tablePattern =  new ArrayList<String>();
+        //comparison is by lists of string
+        tablePattern = dataTable.asList(String.class);
+
+
+        Connection myConnection = this.commonspec.getConnection();
+        String query = "SELECT * FROM "+ tableName  + " order by " +  "id" + ";";
+        try {
+            myStatement = myConnection.createStatement();
+            rs = myStatement.executeQuery(query);
+
+            //takes column names and culumn count
+            ResultSetMetaData resultSetMetaData = rs.getMetaData();
+            int count = resultSetMetaData.getColumnCount();
+            for (int i = 1; i <= count; i++) {
+                sqlTable.add(resultSetMetaData.getColumnName(i).toString());
+            }
+
+            //takes column names and culumn count
+            while (rs.next()) {
+                for (int i = 1; i <= count; i++) {
+                    //aux list without column names
+                    sqlTableAux.add(rs.getObject(i).toString());
+                }
+            }
+            sqlTable.addAll(sqlTableAux);
+
+            assertThat(sqlTable).as("Not equal elements!").isEqualTo(tablePattern);
+            rs.close();
+            myStatement.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+            assertThat(rs).as("There are no table " + tableName).isNotNull();
+        }
+
+    }
+
+    /*
+     * closes opened database
+     *
+     */
+    @Then("^I close database connection$")
+    public void connectDatabase() throws Exception {
+        this.commonspec.getConnection().close();
+    }
+
+    /*
+     * @param tableName
+     * checks the result from select
+     *
+     */
+    @Then("^I check that result is:$")
+    public void comparetable(DataTable dataTable) throws Exception {
+
+        //from Cucumber Datatable, the pattern to verify
+        List<String> tablePattern =  new ArrayList<String>();
+        tablePattern = dataTable.asList(String.class);
+        //the result from select
+        List<String> sqlTable =  new ArrayList<String>();
+
+        //the result is taken from previous step
+        for (int i = 0; ThreadProperty.get("queryresponse" + i) != null; i++) {
+            String ip_value = ThreadProperty.get("queryresponse"+i);
+            sqlTable.add(i,ip_value);
+        }
+
+        for (int i = 0; ThreadProperty.get("queryresponse" + i) != null; i++)
+            ThreadProperty.remove("queryresponse"+i);
+
+        assertThat(tablePattern).as("response is not equal to the expected").isEqualTo(sqlTable);
     }
 }
 

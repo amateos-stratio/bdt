@@ -130,6 +130,8 @@ public class CommonG {
 
     private Optional<SearchResult> previousLdapResults;
 
+    Connection myConnection = null;
+
     /**
      * Checks if a given string matches a regular expression or contains a string
      *
@@ -2004,8 +2006,6 @@ public class CommonG {
      */
     public void connectToPostgreSQLDatabase(String database, String host, String port, String user, String password, Boolean secure, String ca, String crt, String key) throws SQLException {
 
-        Connection myConnection = null;
-
         if (port.startsWith("[")) {
             port = port.substring(1, port.length() - 1);
         }
@@ -2054,6 +2054,14 @@ public class CommonG {
             }
 
         }
+    }
+
+    /*
+     * @return connection object
+     *
+     */
+    public Connection getConnection() {
+        return this.myConnection;
     }
 
 }
