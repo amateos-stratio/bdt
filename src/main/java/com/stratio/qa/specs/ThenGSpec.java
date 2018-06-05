@@ -32,7 +32,6 @@ import org.assertj.core.api.Assertions;
 import org.assertj.core.api.Fail;
 import org.assertj.core.api.WritableAssertionInfo;
 import org.json.JSONArray;
-import org.ldaptive.LdapAttribute;
 import org.openqa.selenium.WebElement;
 
 import java.sql.Connection;
@@ -46,6 +45,7 @@ import static org.testng.AssertJUnit.fail;
 
 /**
  * Generic Then Specs.
+ *
  * @see <a href="ThenGSpec-annotations.html">Then Steps &amp; Matching Regex</a>
  */
 public class ThenGSpec extends BaseGSpec {
@@ -502,7 +502,7 @@ public class ThenGSpec extends BaseGSpec {
                     assertThat(r.getStatusCode()).isEqualTo(expectedStatus);
                     assertThat((new JSONArray(r.getResponse())).length()).isEqualTo(expectedLength);
                 });
-            } else  if (foo.contains("text")) {
+            } else if (foo.contains("text")) {
                 WritableAssertionInfo assertionInfo = new WritableAssertionInfo();
                 Pattern pattern = CommonG.matchesOrContains(expectedText);
                 assertThat(Optional.of(commonspec.getResponse())).hasValueSatisfying(r -> {
@@ -650,7 +650,7 @@ public class ThenGSpec extends BaseGSpec {
      * @param document expected content of znode
      */
     @Then("^the zNode '(.+?)' exists( and contains '(.+?)')?$")
-    public void checkZnodeExists(String zNode, String foo, String document)  throws Exception {
+    public void checkZnodeExists(String zNode, String foo, String document) throws Exception {
         if (document == null) {
             String breakpoint = commonspec.getZookeeperSecClient().zRead(zNode);
             assert breakpoint.equals("") : "The zNode does not exist";
@@ -810,7 +810,8 @@ public class ThenGSpec extends BaseGSpec {
 
     /**
      * Takes the content of a webElement and stores it in the thread environment variable passed as parameter
-     * @param index position of the element in the array of webElements found
+     *
+     * @param index  position of the element in the array of webElements found
      * @param envVar name of the thread environment variable where to store the text
      */
     @Then("^I save content of element in index '(\\d+?)' in environment variable '(.+?)'$")
@@ -910,16 +911,16 @@ public class ThenGSpec extends BaseGSpec {
         java.sql.ResultSet rs = null;
 
         //from postgres table
-        List<String> sqlTable =  new ArrayList<String>();
-        List<String> sqlTableAux =  new ArrayList<String>();
+        List<String> sqlTable = new ArrayList<String>();
+        List<String> sqlTableAux = new ArrayList<String>();
         //from Cucumber Datatable
-        List<String> tablePattern =  new ArrayList<String>();
+        List<String> tablePattern = new ArrayList<String>();
         //comparison is by lists of string
         tablePattern = dataTable.asList(String.class);
 
 
         Connection myConnection = this.commonspec.getConnection();
-        String query = "SELECT * FROM "+ tableName  + " order by " +  "id" + ";";
+        String query = "SELECT * FROM " + tableName + " order by " + "id" + ";";
         try {
             myStatement = myConnection.createStatement();
             rs = myStatement.executeQuery(query);
@@ -968,19 +969,20 @@ public class ThenGSpec extends BaseGSpec {
     public void comparetable(DataTable dataTable) throws Exception {
 
         //from Cucumber Datatable, the pattern to verify
-        List<String> tablePattern =  new ArrayList<String>();
+        List<String> tablePattern = new ArrayList<String>();
         tablePattern = dataTable.asList(String.class);
         //the result from select
-        List<String> sqlTable =  new ArrayList<String>();
+        List<String> sqlTable = new ArrayList<String>();
 
         //the result is taken from previous step
         for (int i = 0; ThreadProperty.get("queryresponse" + i) != null; i++) {
-            String ip_value = ThreadProperty.get("queryresponse"+i);
-            sqlTable.add(i,ip_value);
+            String ip_value = ThreadProperty.get("queryresponse" + i);
+            sqlTable.add(i, ip_value);
         }
 
-        for (int i = 0; ThreadProperty.get("queryresponse" + i) != null; i++)
-            ThreadProperty.remove("queryresponse"+i);
+        for (int i = 0; ThreadProperty.get("queryresponse" + i) != null; i++) {
+            ThreadProperty.remove("queryresponse" + i);
+        }
 
         assertThat(tablePattern).as("response is not equal to the expected").isEqualTo(sqlTable);
     }
