@@ -130,7 +130,7 @@ public class CommonG {
 
     private Optional<SearchResult> previousLdapResults;
 
-    Connection myConnection = null;
+    private Connection myConnection = null;
 
     /**
      * Checks if a given string matches a regular expression or contains a string
