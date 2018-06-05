@@ -18,7 +18,6 @@ package com.stratio.qa.specs;
 
 import com.datastax.driver.core.ColumnDefinitions;
 import com.datastax.driver.core.DataType;
-import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.mongodb.DBObject;
 import com.stratio.qa.assertions.DBObjectsAssert;
@@ -35,6 +34,7 @@ import org.json.JSONArray;
 import org.openqa.selenium.WebElement;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.Statement;
 import java.util.*;
@@ -166,7 +166,7 @@ public class ThenGSpec extends BaseGSpec {
         Map<String, String> dataTableColumns = extractColumnNamesAndTypes(data.raw().get(0));
         // check if the table has columns
         String query = "SELECT * FROM " + tableName + " LIMIT 1;";
-        ResultSet res = commonspec.getCassandraClient().executeQuery(query);
+        com.datastax.driver.core.ResultSet res = commonspec.getCassandraClient().executeQuery(query);
         equalsColumns(res.getColumnDefinitions(), dataTableColumns);
         //receiving the string from the select with the columns
         // that belong to the dataTable
@@ -948,7 +948,6 @@ public class ThenGSpec extends BaseGSpec {
             e.printStackTrace();
             assertThat(rs).as("There are no table " + tableName).isNotNull();
         }
-
     }
 
     /*
@@ -986,5 +985,154 @@ public class ThenGSpec extends BaseGSpec {
 
         assertThat(tablePattern).as("response is not equal to the expected").isEqualTo(sqlTable);
     }
+
+    /**
+     * @param objetType
+     * @param objectName
+     * @throws Exception
+     */
+    @Then("^'(.+?)' '(.+?)' exists$")
+    public void checkObjectExists(String objetType, String objectName) throws Exception {
+        Statement myStatement = null;
+        Connection myConnection = this.commonspec.getConnection();
+
+        String query;
+
+        switch (objetType) {
+
+            case "Table":
+                query = "SELECT tablename FROM pg_tables WHERE tablename = " + "\'" + objectName + "\'" + ";";
+                break;
+
+            case "View":
+                query = "SELECT viewname FROM pg_views WHERE viewname = " + "\'" + objectName + "\'" + ";";
+                break;
+
+            case "Sequence":
+                query = "SELECT sequence_name FROM information_schema.sequences WHERE sequence_name = " + "\'" + objectName + "\'" + ";";
+                break;
+
+            case "Foreign Data Wrapper":
+                query = "SELECT foreign_data_wrapper_name FROM information_schema.foreign_data_wrappers WHERE foreign_data_wrapper_name = " + "\'" + objectName + "\'" + ";";
+                break;
+
+            case "Foreign Server":
+                query = "SELECT foreign_server_name FROM information_schema.foreign_servers WHERE foreign_server_name = " + "\'" + objectName + "\'" + ";";
+                break;
+
+            case "Function":
+                query = "SELECT p.proname FROM pg_catalog.pg_proc p JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace WHERE p.proname = " + "\'" + objectName + "\'" + ";";
+                break;
+
+            case "Schema":
+                query = "SELECT schema_name from information_schema.schemata join pg_namespace on schema_name = nspname where schema_name = " + "\'" + objectName + "\'" + ";";
+                break;
+
+            case "Domain":
+                query = "SELECT domain_name from information_schema.domains WHERE domain_name = " + "\'" + objectName + "\'" + ";";
+                break;
+
+            case "Type":
+                query = "SELECT user_defined_type_name FROM information_schema.user_defined_types WHERE user_defined_type_name = " + "\'" + objectName + "\'" + ";";
+                break;
+
+            case "Column":
+                query = "select column_name from information_schema.columns WHERE column_name = " + "\'" + objectName + "\'" + ";";
+                break;
+
+            default:
+                query = "SELECT 1;";
+                break;
+        }
+
+        try {
+            myStatement = myConnection.createStatement();
+            ResultSet rs = myStatement.executeQuery(query);
+            //if there are no data row
+            if (rs.next() == false) {
+                assertThat(rs.next()).as("there are no " + objetType + ": " + objectName).isTrue();
+            } else {
+                //data exist
+                String resultName = rs.getString(1);
+                assertThat(resultName).as("there are incorrect " + objetType + " name: " + objectName).contains(objectName);
+            }
+            rs.close();
+            myStatement.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Then("^'(.+?)' '(.+?)' doesn't exists$")
+    public void checkObjectNoExists(String objetType, String objectName) throws Exception {
+        Statement myStatement = null;
+        Connection myConnection = this.commonspec.getConnection();
+
+        String query;
+
+        switch (objetType) {
+
+            case "Table":
+                query = "SELECT tablename FROM pg_tables WHERE tablename = " + "\'" + objectName + "\'" + ";";
+                break;
+
+            case "View":
+                query = "SELECT viewname FROM pg_views WHERE viewname = " + "\'" + objectName + "\'" + ";";
+                break;
+
+            case "Sequence":
+                query = "SELECT sequence_name FROM information_schema.sequences WHERE sequence_name = " + "\'" + objectName + "\'" + ";";
+                break;
+
+            case "Foreign Data Wrapper":
+                query = "SELECT foreign_data_wrapper_name FROM information_schema.foreign_data_wrappers WHERE foreign_data_wrapper_name = " + "\'" + objectName + "\'" + ";";
+                break;
+
+            case "Foreign Server":
+                query = "SELECT foreign_server_name FROM information_schema.foreign_servers WHERE foreign_server_name = " + "\'" + objectName + "\'" + ";";
+                break;
+
+            case "Function":
+                query = "SELECT p.proname FROM pg_catalog.pg_proc p JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace WHERE p.proname = " + "\'" + objectName + "\'" + ";";
+                break;
+
+            case "Schema":
+                query = "SELECT schema_name from information_schema.schemata join pg_namespace on schema_name = nspname where schema_name = " + "\'" + objectName + "\'" + ";";
+                break;
+
+            case "Domain":
+                query = "SELECT domain_name from information_schema.domains WHERE domain_name = " + "\'" + objectName + "\'" + ";";
+                break;
+
+            case "Type":
+                query = "SELECT user_defined_type_name FROM information_schema.user_defined_types WHERE user_defined_type_name = " + "\'" + objectName + "\'" + ";";
+                break;
+
+            case "Column":
+                query = "select column_name from information_schema.columns WHERE column_name = " + "\'" + objectName + "\'" + ";";
+                break;
+
+            default:
+                query = "SELECT 1;";
+                break;
+        }
+
+        try {
+            myStatement = myConnection.createStatement();
+            ResultSet rs = myStatement.executeQuery(query);
+            //if there are no data row, table doesn't exists
+            if (rs.next() == false) {
+                assertThat(rs.next()).as(objectName + " exists " + objectName).isFalse();
+            } else {
+                String resultName = rs.getString(1);
+                assertThat(resultName).as(objectName + " exists " + objectName).isEqualToIgnoringCase(objectName);
+            }
+            rs.close();
+            myStatement.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 }
 
