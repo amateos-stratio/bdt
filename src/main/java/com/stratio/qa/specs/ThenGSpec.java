@@ -955,7 +955,7 @@ public class ThenGSpec extends BaseGSpec {
      *
      */
     @Then("^I close database connection$")
-    public void connectDatabase() throws Exception {
+    public void closeDatabase() throws Exception {
         this.commonspec.getConnection().close();
     }
 
