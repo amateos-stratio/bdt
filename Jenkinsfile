@@ -74,6 +74,16 @@ hose {
               'VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8200'],
            'sleep': 5,
            'healthcheck': 8200]],
+        ['POSTGRES': [
+           'image': 'nimbustech/postgres-ssl:9.5',
+           'volumes': [
+		    'src/test/resources/ssl:/var/ssl'],
+           'env': [
+                 'POSTGRES_DB="postgres-test"',
+                 'POSTGRES_PASSWORD="stratio"',
+                 ],
+           'sleep': 10,
+           'healthcheck': 5432]],
     ]
     
     ITPARAMETERS = """
@@ -95,6 +105,8 @@ hose {
         | -DLDAP_SSL=false
         | -DVAULT_URL=%%VAULT
         | -DLDAP_URL=%%LDAP:389""".stripMargin().stripIndent()
+        | -DPOSTGRES_HOST=%%POSTGRES
+
     
     DEV = { config ->        
         doCompile(config)

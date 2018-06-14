@@ -2028,7 +2028,7 @@ public class CommonG {
                 props.setProperty("user", user);
             }
             if (password != null) {
-                props.setProperty("password", user);
+                props.setProperty("password", password);
             }
             if (ca != null) {
                 props.setProperty("sslrootcert", ca);
