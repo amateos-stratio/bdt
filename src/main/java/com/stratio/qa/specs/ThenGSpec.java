@@ -31,6 +31,8 @@ import org.assertj.core.api.Assertions;
 import org.assertj.core.api.Fail;
 import org.assertj.core.api.WritableAssertionInfo;
 import org.json.JSONArray;
+import org.ldaptive.LdapAttribute;
+import org.openqa.selenium.Cookie;
 import org.openqa.selenium.WebElement;
 
 import java.sql.Connection;
@@ -594,6 +596,26 @@ public class ThenGSpec extends BaseGSpec {
         commonspec.setSeleniumCookies(commonspec.getDriver().manage().getCookies());
     }
 
+
+    /**
+     * Get dcos-auth-cookie
+     **/
+    @Then("^I save selenium dcos acs auth cookie in variable '(.+?)'$")
+    public void getDcosAcsAuthCookie(String envVar) throws Exception {
+        if (commonspec.getSeleniumCookies() != null && commonspec.getSeleniumCookies().size() != 0) {
+            for (Cookie cookie: commonspec.getSeleniumCookies()) {
+                if (cookie.getName().contains("dcos-acs-auth-cookie")) {
+                    //It's this cookie where we have to extract the value
+                    ThreadProperty.set(envVar, cookie.getValue());
+                    break;
+                }
+            }
+        } else {
+            ThreadProperty.set(envVar, null);
+        }
+    }
+
+
     /**
      * Check if expression defined by JSOPath (http://goessner.net/articles/JsonPath/index.html)
      * match in JSON stored in a environment variable.
@@ -630,7 +652,7 @@ public class ThenGSpec extends BaseGSpec {
 
         String configFile = commonspec.getRemoteSSHConnection().getResult();
         String myValue = commonspec.getJSONPathString(configFile, ".labels", "0");
-        String myJson = commonspec.updateMarathonJson(commonspec.removeJSONPathElement(configFile, ".labels"));
+        String myJson = commonspec.updateMarathonJson(commonspec.removeJSONPathElement(configFile, "$.labels"));
 
         String newValue = myValue.replaceFirst("\\{", "{\"" + key + "\": \"" + value + "\", ");
         newValue = "\"labels\":" + newValue;
@@ -955,7 +977,7 @@ public class ThenGSpec extends BaseGSpec {
      *
      */
     @Then("^I close database connection$")
-    public void connectDatabase() throws Exception {
+    public void closeDatabase() throws Exception {
         this.commonspec.getConnection().close();
     }
 
