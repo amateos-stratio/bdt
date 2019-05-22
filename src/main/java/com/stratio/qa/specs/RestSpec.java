@@ -236,14 +236,15 @@ public class RestSpec extends BaseGSpec {
      * @param endPoint
      * @param foo
      * @param loginInfo
+     * @param DoesNotExist  (if 'empty', creation is forced deleting the previous policy if exists)
      * @param baseData
      * @param baz
      * @param type
      * @param modifications
      * @throws Exception
      */
-    @When("^I create '(.+?)' '(.+?)' in endpoint '(.+?)'( with user and password '(.+:.+?)')? if it does not exist based on '([^:]+?)'( as '(json|string|gov)')? with:$")
-    public void createResourceIfNotExist(String resource, String resourceId, String endPoint, String foo, String loginInfo, String baseData, String baz, String type, DataTable modifications) throws Exception {
+    @When("^I create '(.+?)' '(.+?)' in endpoint '(.+?)'( with user and password '(.+:.+?)')?( if it does not exist)? based on '([^:]+?)'( as '(json|string|gov)')? with:$")
+    public void createResourceIfNotExist(String resource, String resourceId, String endPoint, String foo, String loginInfo, String DoesNotExist, String baseData, String baz, String type, DataTable modifications) throws Exception {
 
         Integer expectedStatusCreate = new Integer(201);
         Integer expectedStatusDelete = new Integer(200);
@@ -269,21 +270,27 @@ public class RestSpec extends BaseGSpec {
                 }
             } else {
                 if (resource.equals("policy") && commonspec.getResponse().getStatusCode() == 200) {
-                    //Delete policy if exists
-                    sendRequest("DELETE", endPointResource, foo, loginInfo, baseData, baz, type, modifications);
-                    commonspec.getLogger().warn("Policy {} deleted", resourceId);
+                    if (DoesNotExist != null) {
+                        //Policy already exists
+                        commonspec.getLogger().warn("Policy {} already exist - not created", resourceId);
 
-                    try {
-                        assertThat(commonspec.getResponse().getStatusCode()).isEqualTo(expectedStatusDelete);
-                    } catch (Exception e) {
-                        commonspec.getLogger().warn("Error deleting Policy {}: {}", resourceId, commonspec.getResponse().getResponse());
-                        throw e;
+                    } else {
+                        //Delete policy if exists
+                        sendRequest("DELETE", endPointResource, foo, loginInfo, baseData, baz, type, modifications);
+                        commonspec.getLogger().warn("Policy {} deleted", resourceId);
+
+                        try {
+                            assertThat(commonspec.getResponse().getStatusCode()).isEqualTo(expectedStatusDelete);
+                        } catch (Exception e) {
+                            commonspec.getLogger().warn("Error deleting Policy {}: {}", resourceId, commonspec.getResponse().getResponse());
+                            throw e;
+                        }
+                        createResourceIfNotExist(resource, resourceId, endPoint, foo, loginInfo, DoesNotExist, baseData, baz, type, modifications);
                     }
-                    createResourceIfNotExist(resource, resourceId, endPoint, foo, loginInfo, baseData, baz, type, modifications);
                 }
             }
         } catch (Exception e) {
-            commonspec.getLogger().error("Rest Host or Rest Port are not initialized {}: {}", commonspec.getRestHost(), commonspec.getRestPort());
+            commonspec.getLogger().error("Rest Host or Rest Port are not initialized {}{}", commonspec.getRestHost(), commonspec.getRestPort());
             throw e;
         }
     }
