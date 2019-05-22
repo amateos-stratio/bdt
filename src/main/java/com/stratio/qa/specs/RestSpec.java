@@ -289,7 +289,7 @@ public class RestSpec extends BaseGSpec {
 
 
     /**
-     *Creates a custom group in gosec management if the groupId doesn't exist
+     *Creates a custom group in gosec management if the GroupId doesn't exist
      *
      * @param groupId
      * @param endPoint
