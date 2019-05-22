@@ -22,6 +22,7 @@ import cucumber.api.DataTable;
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
+import cucumber.deps.com.thoughtworks.xstream.mapper.Mapper;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.WritableAssertionInfo;
 import org.json.JSONArray;
@@ -228,9 +229,10 @@ public class RestSpec extends BaseGSpec {
 
 
     /**
-     * Creates a custom user in gosec management if the userId doesn't exist
+     * Creates a custom resource in gosec management if the resource doesn't exist
      *
-     * @param userId
+     * @param resource
+     * @param resourceId    (userId, groupId or policyId)
      * @param endPoint
      * @param foo
      * @param loginInfo
@@ -240,201 +242,87 @@ public class RestSpec extends BaseGSpec {
      * @param modifications
      * @throws Exception
      */
-    @When("^I create user '(.+?)' to '(.+?)'( with user and password '(.+:.+?)')? if it does not exist based on '([^:]+?)'( as '(json|string|gov)')? with:$")
-    public void createUserIfNotExist(String userId, String endPoint, String foo, String loginInfo, String baseData, String baz, String type, DataTable modifications) throws Exception {
-
-        Integer expectedStatusCreate = new Integer(201);
-        String endPointUser = endPoint + "/" + userId;
-
-        sendRequestNoDataTable("GET", endPointUser, foo, loginInfo, null, null, null, null);
-
-        if (commonspec.getResponse().getStatusCode() != 200) {
-            sendRequest("POST", endPoint, foo, loginInfo, baseData, baz, type, modifications);
-            try {
-                if (commonspec.getResponse().getStatusCode() == 409) {
-                    commonspec.getLogger().warn("User {} already exists", userId);
-                } else {
-                    assertThat(commonspec.getResponse().getStatusCode()).isEqualTo(expectedStatusCreate);
-                    commonspec.getLogger().warn("User {} created", userId);
-                }
-            } catch (Exception e) {
-                commonspec.getLogger().warn("Error creating user {}: {}", userId, commonspec.getResponse().getResponse());
-                throw e;
-            }
-        }
-    }
-
-
-    /**
-     * Creates a custom group in gosec management if the GroupId doesn't exist
-     *
-     * @param groupId
-     * @param endPoint
-     * @param foo
-     * @param loginInfo
-     * @param baseData
-     * @param baz
-     * @param type
-     * @param modifications
-     * @throws Exception
-     */
-    @When("^I create group '(.+?)' to '(.+?)'( with user and password '(.+:.+?)')? if it does not exist based on '([^:]+?)'( as '(json|string|gov)')? with:$")
-    public void createGroupIfNotExist(String groupId, String endPoint, String foo, String loginInfo, String baseData, String baz, String type, DataTable modifications) throws Exception {
-
-        Integer expectedStatusCreate = new Integer(201);
-        String endPointUser = endPoint + "/" + groupId;
-
-        sendRequestNoDataTable("GET", endPointUser, foo, loginInfo, null, null, null, null);
-
-        if (commonspec.getResponse().getStatusCode() != 200) {
-            sendRequest("POST", endPoint, foo, loginInfo, baseData, baz, type, modifications);
-            try {
-                if (commonspec.getResponse().getStatusCode() == 409) {
-                    commonspec.getLogger().warn("Group {} already exists", groupId);
-                } else {
-                    assertThat(commonspec.getResponse().getStatusCode()).isEqualTo(expectedStatusCreate);
-                    commonspec.getLogger().warn("Group {} created", groupId);
-                }
-            } catch (Exception e) {
-                commonspec.getLogger().warn("Error creating group {}: {}", groupId, commonspec.getResponse().getResponse());
-                throw e;
-            }
-        }
-    }
-
-    /**
-     * Creates a policy in gosec management if the policyId doesn't exist. If it exists, the old one is deleted before the creation.
-     *
-     * @param policyId
-     * @param endPoint
-     * @param foo
-     * @param loginInfo
-     * @param baseData
-     * @param baz
-     * @param type
-     * @param modifications
-     * @throws Exception
-     */
-    @When("^I create policy '(.+?)' to '(.+?)'( with user and password '(.+:.+?)')? if it does not exist based on '([^:]+?)'( as '(json|string|gov)')? with:$")
-    public void createPolicyIfNotExist(String policyId, String endPoint, String foo, String loginInfo, String baseData, String baz, String type, DataTable modifications) throws Exception {
+    @When("^I create '(.+?)' '(.+?)' in endpoint '(.+?)'( with user and password '(.+:.+?)')? if it does not exist based on '([^:]+?)'( as '(json|string|gov)')? with:$")
+    public void createResourceIfNotExist(String resource, String resourceId, String endPoint, String foo, String loginInfo, String baseData, String baz, String type, DataTable modifications) throws Exception {
 
         Integer expectedStatusCreate = new Integer(201);
         Integer expectedStatusDelete = new Integer(200);
-        String endPointPolicy = endPoint + "/" + policyId;
+        String endPointResource = endPoint + "/" + resourceId;
 
-        sendRequestNoDataTable("GET", endPointPolicy, foo, loginInfo, null, null, null, null);
-
-        if (commonspec.getResponse().getStatusCode() == 200) {
-            //Delete policy if exists
-            sendRequest("DELETE", endPointPolicy, foo, loginInfo, baseData, baz, type, modifications);
-
-            try {
-                assertThat(commonspec.getResponse().getStatusCode()).isEqualTo(expectedStatusDelete);
-            } catch (Exception e) {
-                commonspec.getLogger().warn("Error deleting Policy {}: {}", policyId, commonspec.getResponse().getResponse());
-                throw e;
-            }
-        }
-
-        //Create policy
-        sendRequest("POST", endPoint, foo, loginInfo, baseData, baz, type, modifications);
         try {
-            if (commonspec.getResponse().getStatusCode() == 409) {
-                commonspec.getLogger().warn("Policy {} already exists", policyId);
+            assertThat(commonspec.getRestHost().isEmpty() || commonspec.getRestPort().isEmpty());
+
+            sendRequestNoDataTable("GET", endPointResource, foo, loginInfo, null, null, null, null);
+
+            if (commonspec.getResponse().getStatusCode() != 200) {
+                sendRequest("POST", endPoint, foo, loginInfo, baseData, baz, type, modifications);
+                try {
+                    if (commonspec.getResponse().getStatusCode() == 409) {
+                        commonspec.getLogger().warn("The resource {} already exists", resourceId);
+                    } else {
+                        assertThat(commonspec.getResponse().getStatusCode()).isEqualTo(expectedStatusCreate);
+                        commonspec.getLogger().warn("Resource {} created", resourceId);
+                    }
+                } catch (Exception e) {
+                    commonspec.getLogger().warn("Error creating user {}: {}", resourceId, commonspec.getResponse().getResponse());
+                    throw e;
+                }
             } else {
-                assertThat(commonspec.getResponse().getStatusCode()).isEqualTo(expectedStatusCreate);
-                commonspec.getLogger().warn("Policy {} created", policyId);
+                if (resource.equals("policy") && commonspec.getResponse().getStatusCode() == 200) {
+                    //Delete policy if exists
+                    sendRequest("DELETE", endPointResource, foo, loginInfo, baseData, baz, type, modifications);
+                    commonspec.getLogger().warn("Policy {} deleted", resourceId);
+
+                    try {
+                        assertThat(commonspec.getResponse().getStatusCode()).isEqualTo(expectedStatusDelete);
+                    } catch (Exception e) {
+                        commonspec.getLogger().warn("Error deleting Policy {}: {}", resourceId, commonspec.getResponse().getResponse());
+                        throw e;
+                    }
+                    createResourceIfNotExist(resource, resourceId, endPoint, foo, loginInfo, baseData, baz, type, modifications);
+                }
             }
         } catch (Exception e) {
-            commonspec.getLogger().warn("Error creating policy {}: {}", policyId, commonspec.getResponse().getResponse());
+            commonspec.getLogger().error("Rest Host or Rest Port are not initialized {}: {}", commonspec.getRestHost(), commonspec.getRestPort());
             throw e;
         }
     }
 
     /**
-     * Deletes a policy in gosec management if the policyId exists previously.
+     * Deletes a resource in gosec management if the resourceId exists previously.
      *
-     * @param policyId
+     * @param resource
+     * @param resourceId
      * @param endPoint
      * @param foo
      * @param loginInfo
      * @throws Exception
      */
-    @When("^I delete policy '(.+?)' to '(.+?)'( with user and password '(.+:.+?)')? if it exists$")
-    public void deletePolicyIfExists(String policyId, String endPoint, String foo, String loginInfo) throws Exception {
+    @When("^I delete '(.+?) '(.+?)' in endpoint '(.+?)'( with user and password '(.+:.+?)')? if it exists$")
+    public void deleteUserIfExists(String resource, String resourceId, String endPoint, String foo, String loginInfo) throws Exception {
         Integer expectedStatusDelete = new Integer(200);
-        String endPointPolicy = endPoint + "/" + policyId;
+        String endPointResource = endPoint + "/" + resourceId;
 
-        sendRequestNoDataTable("GET", endPointPolicy, foo, loginInfo, null, null, null, null);
+        try {
+            assertThat(commonspec.getRestHost().isEmpty() || commonspec.getRestPort().isEmpty());
 
-        if (commonspec.getResponse().getStatusCode() == 200) {
-            //Delete policy if exists
-            sendRequestNoDataTable("DELETE", endPointPolicy, foo, loginInfo, null, null, null, null);
+            sendRequestNoDataTable("GET", endPointResource, foo, loginInfo, null, null, null, null);
 
-            try {
-                assertThat(commonspec.getResponse().getStatusCode()).isEqualTo(expectedStatusDelete);
-            } catch (Exception e) {
-                commonspec.getLogger().warn("Error deleting Policy {}: {}", policyId, commonspec.getResponse().getResponse());
-                throw e;
+            if (commonspec.getResponse().getStatusCode() == 200) {
+                //Delete user if exists
+                sendRequestNoDataTable("DELETE", endPointResource, foo, loginInfo, null, null, null, null);
+                commonspec.getLogger().warn("Resource {} deleted", resourceId);
+
+                try {
+                    assertThat(commonspec.getResponse().getStatusCode()).isEqualTo(expectedStatusDelete);
+                } catch (Exception e) {
+                    commonspec.getLogger().warn("Error deleting Resource {}: {}", resourceId, commonspec.getResponse().getResponse());
+                    throw e;
+                }
             }
-        }
-    }
-
-    /**
-     * Deletes a user in gosec management if the userId exists previously.
-     *
-     * @param userId
-     * @param endPoint
-     * @param foo
-     * @param loginInfo
-     * @throws Exception
-     */
-    @When("^I delete user '(.+?)' to '(.+?)'( with user and password '(.+:.+?)')? if it exists$")
-    public void deleteUserIfExists(String userId, String endPoint, String foo, String loginInfo) throws Exception {
-        Integer expectedStatusDelete = new Integer(200);
-        String endPointUser = endPoint + "/" + userId;
-
-        sendRequestNoDataTable("GET", endPointUser, foo, loginInfo, null, null, null, null);
-
-        if (commonspec.getResponse().getStatusCode() == 200) {
-            //Delete user if exists
-            sendRequestNoDataTable("DELETE", endPointUser, foo, loginInfo, null, null, null, null);
-
-            try {
-                assertThat(commonspec.getResponse().getStatusCode()).isEqualTo(expectedStatusDelete);
-            } catch (Exception e) {
-                commonspec.getLogger().warn("Error deleting User {}: {}", userId, commonspec.getResponse().getResponse());
-                throw e;
-            }
-        }
-    }
-
-    /**
-     * Deletes a group in gosec management if the userId exists previously.
-     *
-     * @param groupId
-     * @param endPoint
-     * @param foo
-     * @param loginInfo
-     * @throws Exception
-     */
-    @When("^I delete group '(.+?)' to '(.+?)'( with user and password '(.+:.+?)')? if it exists$")
-    public void deleteGroupIfExists(String groupId, String endPoint, String foo, String loginInfo) throws Exception {
-        Integer expectedStatusDelete = new Integer(200);
-        String endPointGroup = endPoint + "/" + groupId;
-
-        sendRequestNoDataTable("GET", endPointGroup, foo, loginInfo, null, null, null, null);
-
-        if (commonspec.getResponse().getStatusCode() == 200) {
-            //Delete group if exists
-            sendRequestNoDataTable("DELETE", endPointGroup, foo, loginInfo, null, null, null, null);
-
-            try {
-                assertThat(commonspec.getResponse().getStatusCode()).isEqualTo(expectedStatusDelete);
-            } catch (Exception e) {
-                commonspec.getLogger().warn("Error deleting Group {}: {}", groupId, commonspec.getResponse().getResponse());
-                throw e;
-            }
+        } catch (Exception e) {
+            commonspec.getLogger().error("Rest Host or Rest Port are not initialized {}: {}", commonspec.getRestHost(), commonspec.getRestPort());
+            throw e;
         }
     }
 
