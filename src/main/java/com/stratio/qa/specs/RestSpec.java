@@ -308,7 +308,7 @@ public class RestSpec extends BaseGSpec {
      * @param loginInfo
      * @throws Exception
      */
-    @When("^I delete '(.+?) '(.+?)' in endpoint '(.+?)'( with user and password '(.+:.+?)')? if it exists$")
+    @When("^I delete '(policy|user|group)' '(.+?)' using API service path '(.+?)'( with user and password '(.+:.+?)')? if it exists$")
     public void deleteUserIfExists(String resource, String resourceId, String endPoint, String loginInfo) throws Exception {
         Integer expectedStatusDelete = new Integer(200);
         String endPointResource = endPoint + "/" + resourceId;
