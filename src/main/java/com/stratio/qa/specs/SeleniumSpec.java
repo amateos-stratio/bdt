@@ -16,6 +16,7 @@
 
 package com.stratio.qa.specs;
 
+import com.stratio.qa.cucumber.converter.NullableString;
 import com.stratio.qa.cucumber.converter.Strokes;
 import com.stratio.qa.utils.PreviousWebElements;
 import com.stratio.qa.utils.ThreadProperty;
@@ -306,11 +307,12 @@ public class SeleniumSpec extends BaseGSpec {
     /**
      * Type a {@code text} on an numbered {@code index} previously found element.
      *
-     * @param text
+     * @param nullablestring
      * @param index
      */
-    @When("I type '{nullablestring}' on the element on index '{int}'")
-    public void seleniumType(String text, Integer index) {
+    @When("I type {string} on the element on index '{int}'")
+    public void seleniumType(String nullablestring, Integer index) {
+        String text = NullableString.transform(nullablestring);
         assertThat(this.commonspec, commonspec.getPreviousWebElements()).as("There are less found elements than required")
                 .hasAtLeast(index);
         while (text.length() > 0) {
@@ -333,11 +335,13 @@ public class SeleniumSpec extends BaseGSpec {
 
     /**
      * Paste text on {@code text}
-     * @param jsSelector example: div #id_div a .a_class
-     * @param text
+     * @param nullableSelector example: div #id_div a .a_class
+     * @param nullableTest
      */
-    @Given("I type on element '{nullablestring}' the following text '{nullablestring}'")
-    public void seleniumAppend(String jsSelector, String text) {
+    @Given("I type on element {string} the following text {string}")
+    public void seleniumAppend(String nullableSelector, String nullableTest) {
+        String jsSelector = NullableString.transform(nullableSelector);
+        String text = NullableString.transform(nullableTest);
         WebDriver driver = commonspec.getDriver();
         JavascriptExecutor js = (JavascriptExecutor) driver;
         js.executeScript("document.querySelector('" + jsSelector + "').value = '" + text + "'");

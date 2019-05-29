@@ -26,7 +26,6 @@ import java.util.Locale;
 import static java.util.Locale.ENGLISH;
 
 public class TypeRegistryConfiguration implements TypeRegistryConfigurer {
-    public static final int DEFAULT_RADIX = 16;
 
     @Override
     public Locale locale() {
@@ -35,35 +34,6 @@ public class TypeRegistryConfiguration implements TypeRegistryConfigurer {
 
     @Override
     public void configureTypeRegistry(TypeRegistry typeRegistry) {
-        typeRegistry.defineParameterType(new ParameterType<>(
-                "nullablestring",
-                "(.+?)",
-                String.class,
-                new Transformer<String>() {
-                    @Override
-                    public String transform(String input) throws Throwable {
-                        if ("//NONE//".equals(input)) {
-                            return "";
-                        } else if ("//NULL//".equals(input)) {
-                            return null;
-                        } else if (input.startsWith("0x")) {
-                            int cInt = Integer.parseInt(input.substring(2), DEFAULT_RADIX);
-                            char[] cArr = Character.toChars(cInt);
-                            return String.valueOf(cArr);
-                        } else {
-                            return input;
-                        }
-                    }
-                }
-        ));
-
-        typeRegistry.defineParameterType(new ParameterType<>(
-                "strokes",
-                "(.+?)",
-                Strokes.class,
-                Strokes::new
-        ));
-
         typeRegistry.defineParameterType(new ParameterType<>(
                 "isornot",
                 "(IS|IS NOT)",
