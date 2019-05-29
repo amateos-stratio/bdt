@@ -715,13 +715,11 @@ public class CommonG {
         }
         String text = writer.toString();
 
-        String std = text.replace("\r", "").replace("\n", ""); // make sure we have unix style text regardless of the input
-
-
         if ("json".equals(type)) {
+            String std = text.replace("\r", "").replace("\n", ""); // make sure we have unix style text regardless of the input
             result = JsonValue.readHjson(std).asObject().toString();
         } else {
-            result = std;
+            result = text;
         }
         return result;
     }
