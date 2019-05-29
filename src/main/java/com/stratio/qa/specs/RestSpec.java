@@ -224,14 +224,14 @@ public class RestSpec extends BaseGSpec {
 
     @When("^I create '(policy|user|group)' '(.+?)' using API service path '(.+?)'( with user and password '(.+:.+?)')? based on '([^:]+?)'( as '(json|string|gov)')? with:$")
     public void createResource(String resource, String resourceId, String endPoint, String loginInfo, String baseData, String type, DataTable modifications) throws Exception {
-        createResourceIfNotExist(resource, resourceId, endPoint, loginInfo, null, baseData, type, modifications);
+        createResourceIfNotExist(resource, resourceId, endPoint, loginInfo, false, baseData, type, modifications);
 
     }
 
 
     @When("^I create '(policy|user|group)' '(.+?)' using API service path '(.+?)'( with user and password '(.+:.+?)')? if it does not exist based on '([^:]+?)'( as '(json|string|gov)')? with:$")
     public void createResourceIfNotExist(String resource, String resourceId, String endPoint, String loginInfo, String baseData, String type, DataTable modifications) throws Exception {
-        createResourceIfNotExist(resource, resourceId, endPoint, loginInfo, "true", baseData, type, modifications);
+        createResourceIfNotExist(resource, resourceId, endPoint, loginInfo, true, baseData, type, modifications);
     }
 
 
@@ -248,7 +248,7 @@ public class RestSpec extends BaseGSpec {
      * @param modifications
      * @throws Exception
      */
-    private void createResourceIfNotExist(String resource, String resourceId, String endPoint, String loginInfo, String doesNotExist, String baseData, String type, DataTable modifications) throws Exception {
+    private void createResourceIfNotExist(String resource, String resourceId, String endPoint, String loginInfo, boolean doesNotExist, String baseData, String type, DataTable modifications) throws Exception {
         Integer expectedStatusCreate = new Integer(201);
         Integer expectedStatusDelete = new Integer(200);
         String endPointResource = endPoint + "/" + resourceId;
@@ -274,7 +274,7 @@ public class RestSpec extends BaseGSpec {
             } else {
                 commonspec.getLogger().warn("{}:{} already exist", resource, resourceId);
                 if (resource.equals("policy") && commonspec.getResponse().getStatusCode() == 200) {
-                    if (doesNotExist != null) {
+                    if (doesNotExist == true) {
                         //Policy already exists
                         commonspec.getLogger().warn("Policy {} already exist - not created", resourceId);
 
