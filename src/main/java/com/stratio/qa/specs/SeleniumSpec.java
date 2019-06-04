@@ -198,6 +198,7 @@ public class SeleniumSpec extends BaseGSpec {
 
     /**
      * Dragging element with offset
+     *
      * @param element
      * @param xOffset
      * @param yOffset
@@ -338,6 +339,7 @@ public class SeleniumSpec extends BaseGSpec {
 
     /**
      * Paste text on {@code text}
+     *
      * @param nullableSelector example: div #id_div a .a_class
      * @param nullableTest
      */
@@ -352,6 +354,7 @@ public class SeleniumSpec extends BaseGSpec {
 
     /**
      * Wait for render a html element
+     *
      * @param method
      * @param element
      * @param sTimeout
@@ -658,7 +661,7 @@ public class SeleniumSpec extends BaseGSpec {
     @Then("^I save selenium dcos acs auth cookie in variable '(.+?)'$")
     public void getDcosAcsAuthCookie(String envVar) throws Exception {
         if (commonspec.getSeleniumCookies() != null && commonspec.getSeleniumCookies().size() != 0) {
-            for (Cookie cookie: commonspec.getSeleniumCookies()) {
+            for (Cookie cookie : commonspec.getSeleniumCookies()) {
                 if (cookie.getName().contains("dcos-acs-auth-cookie")) {
                     //It's this cookie where we have to extract the value
                     ThreadProperty.set(envVar, cookie.getValue());
@@ -676,7 +679,7 @@ public class SeleniumSpec extends BaseGSpec {
     @Then("^I save selenium cookie '(.+?)' in variable '(.+?)'$")
     public void getDcosAcsAuthCookie(String cookieName, String envVar) throws Exception {
         if (commonspec.getSeleniumCookies() != null && commonspec.getSeleniumCookies().size() != 0) {
-            for (Cookie cookie: commonspec.getSeleniumCookies()) {
+            for (Cookie cookie : commonspec.getSeleniumCookies()) {
                 if (cookie.getName().contains(cookieName)) {
                     //It's this cookie where we have to extract the value
                     ThreadProperty.set(envVar, cookie.getValue());
@@ -697,6 +700,7 @@ public class SeleniumSpec extends BaseGSpec {
     public void checkIfCookieExists(String cookieName) {
         Assertions.assertThat(commonspec.cookieExists(cookieName)).isEqualTo(true);
     }
+
     /**
      * Check if the length of the cookie set match with the number of cookies thas must be saved
      *
@@ -720,4 +724,23 @@ public class SeleniumSpec extends BaseGSpec {
         String text = commonspec.getPreviousWebElements().getPreviousWebElements().get(index).getText();
         ThreadProperty.set(envVar, text);
     }
+
+    /**
+     * Types text if the element exists, if not return a warning message but test continues
+     *
+     * @param text  text to introduce in the located field
+     * @param method name of the thread environment variable where to store the text
+     * @param element Element to find
+     */
+    @Then("^I type '(.+?)' if the element exists with '([^:]*?):(.+?)'$")
+    public void typeTextIfElemenExists(String text, String method, String element) throws ClassNotFoundException, NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+        try {
+            assertSeleniumNElementExists(1, method, element);
+        } catch (AssertionError e) {
+            commonspec.getLogger().warn("Element with {}:{} does not exist, let's continue...", method, element);
+            return;
+        }
+        seleniumType(text, 0);
+    }
+
 }
