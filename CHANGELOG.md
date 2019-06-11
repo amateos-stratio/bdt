@@ -4,7 +4,7 @@ Only listing significant user-visible, not internal code cleanups and minor bug 
 
 ## 0.12.0 (upcoming)
 
-* Pending changelog
+* [QATM-2490] Save service response in environment variable without File parameters
 
 ## 0.11.0 (June 11, 2019)
 

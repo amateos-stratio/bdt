@@ -71,7 +71,7 @@ public class RestTest {
         commong.setResponse("GET", (Response) response.get());
 
         RestSpec rest = new RestSpec(commong);
-        rest.saveResponseInEnvironmentVariableFile("envVar", "foo", "file.txt");
+        rest.saveResponseInEnvironmentVariableFile("envVar", "file.txt");
 
         assertThat(ThreadProperty.get("envVar")).as("Unexpected content in thread variable").contains("Responsibles: QA, Pedro Bedia");
 
@@ -94,7 +94,7 @@ public class RestTest {
         commong.setResponse("GET", (Response) response.get());
 
         RestSpec rest = new RestSpec(commong);
-        rest.saveResponseInEnvironmentVariableFile("envVar", null, "file.txt");
+        rest.saveResponseInEnvironmentVariableFile("envVar", "file.txt");
 
         assertThat(ThreadProperty.get("envVar")).as("Unexpected content in thread variable").contains("Responsibles: QA, Pedro Bedia");
 

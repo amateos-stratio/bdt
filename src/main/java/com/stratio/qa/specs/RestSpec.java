@@ -508,12 +508,12 @@ public class RestSpec extends BaseGSpec {
     }
 
     @Then("^I save service response in environment variable '(.*?)'( and file '(.*?)')?$")
-    public void saveResponseInEnvironmentVariableFile(String envVar, String foo, String fileName) throws Exception {
+    public void saveResponseInEnvironmentVariableFile(String envVar, String fileName) throws Exception {
         String value = commonspec.getResponse().getResponse();
 
         ThreadProperty.set(envVar, value);
 
-        if (foo != null) {
+        if (fileName != null) {
             // Create file (temporary) and set path to be accessible within test
             File tempDirectory = new File(String.valueOf(System.getProperty("user.dir") + "/target/test-classes/"));
             String absolutePathFile = tempDirectory.getAbsolutePath() + "/" + fileName;
