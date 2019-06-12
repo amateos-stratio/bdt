@@ -31,6 +31,7 @@ import java.util.concurrent.Future;
 import java.util.regex.Pattern;
 
 import static com.stratio.qa.assertions.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 /**
  * Generic API Rest Specs.
@@ -507,13 +508,15 @@ public class RestSpec extends BaseGSpec {
         }
     }
 
-    @Then("^I save service response (in environment variable '(.*?)')?( in file '(.*?)')?$")
+    @Then("^I save service response( in environment variable '(.*?)')?( in file '(.*?)')?$")
     public void saveResponseInEnvironmentVariableFile(String envVar, String fileName) throws Exception {
 
         if (envVar != null || fileName != null) {
             String value = commonspec.getResponse().getResponse();
 
-            ThreadProperty.set(envVar, value);
+            if (envVar != null) {
+                ThreadProperty.set(envVar, value);
+            }
 
             if (fileName != null) {
                 // Create file (temporary) and set path to be accessible within test
@@ -532,6 +535,8 @@ public class RestSpec extends BaseGSpec {
 
                 Assertions.assertThat(new File(absolutePathFile).isFile());
             }
+        } else {
+            fail("No environment variable neither file defined");
         }
     }
 

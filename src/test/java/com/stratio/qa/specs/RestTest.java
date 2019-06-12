@@ -50,7 +50,7 @@ public class RestTest {
         RestSpec rest = new RestSpec(commong);
 
         try {
-            rest.sendRequestDataTableTimeout(10,1,requestType,endPoint,null,expectedMsg,baseData,type,modifications);
+            rest.sendRequestDataTableTimeout(10, 1, requestType, endPoint, null, expectedMsg, baseData, type, modifications);
             fail("Expected Exception");
         } catch (NullPointerException e) {
             assertThat(e.getClass().toString()).as("Unexpected exception").isEqualTo(NullPointerException.class.toString());
@@ -94,7 +94,7 @@ public class RestTest {
         commong.setResponse("GET", (Response) response.get());
 
         RestSpec rest = new RestSpec(commong);
-        rest.saveResponseInEnvironmentVariableFile("envVar", "file.txt");
+        rest.saveResponseInEnvironmentVariableFile("envVar", null);
 
         assertThat(ThreadProperty.get("envVar")).as("Unexpected content in thread variable").contains("Responsibles: QA, Pedro Bedia");
 
