@@ -507,28 +507,31 @@ public class RestSpec extends BaseGSpec {
         }
     }
 
-    @Then("^I save service response in environment variable '(.*?)'( and file '(.*?)')?$")
+    @Then("^I save service response (in environment variable '(.*?)')?( in file '(.*?)')?$")
     public void saveResponseInEnvironmentVariableFile(String envVar, String fileName) throws Exception {
-        String value = commonspec.getResponse().getResponse();
 
-        ThreadProperty.set(envVar, value);
+        if (envVar != null || fileName != null) {
+            String value = commonspec.getResponse().getResponse();
 
-        if (fileName != null) {
-            // Create file (temporary) and set path to be accessible within test
-            File tempDirectory = new File(String.valueOf(System.getProperty("user.dir") + "/target/test-classes/"));
-            String absolutePathFile = tempDirectory.getAbsolutePath() + "/" + fileName;
-            commonspec.getLogger().debug("Creating file {} in 'target/test-classes'", absolutePathFile);
-            // Note that this Writer will delete the file if it exists
-            Writer out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(absolutePathFile), "UTF-8"));
-            try {
-                out.write(value);
-            } catch (Exception e) {
-                commonspec.getLogger().error("Custom file {} hasn't been created:\n{}", absolutePathFile, e.toString());
-            } finally {
-                out.close();
+            ThreadProperty.set(envVar, value);
+
+            if (fileName != null) {
+                // Create file (temporary) and set path to be accessible within test
+                File tempDirectory = new File(String.valueOf(System.getProperty("user.dir") + "/target/test-classes/"));
+                String absolutePathFile = tempDirectory.getAbsolutePath() + "/" + fileName;
+                commonspec.getLogger().debug("Creating file {} in 'target/test-classes'", absolutePathFile);
+                // Note that this Writer will delete the file if it exists
+                Writer out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(absolutePathFile), "UTF-8"));
+                try {
+                    out.write(value);
+                } catch (Exception e) {
+                    commonspec.getLogger().error("Custom file {} hasn't been created:\n{}", absolutePathFile, e.toString());
+                } finally {
+                    out.close();
+                }
+
+                Assertions.assertThat(new File(absolutePathFile).isFile());
             }
-
-            Assertions.assertThat(new File(absolutePathFile).isFile());
         }
     }
 
