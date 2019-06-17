@@ -75,6 +75,7 @@ import java.util.regex.Pattern;
 
 import static com.stratio.qa.assertions.Assertions.assertThat;
 import static org.testng.Assert.fail;
+
 import java.text.ParseException;
 import java.util.Date;
 
@@ -1329,8 +1330,51 @@ public class CommonG {
                     response = this.getClient().executeRequest(request.build());
                     break;
                 }
-            case "CONNECT":
             case "PATCH":
+                if (data == null) {
+                    Exception missingFields = new Exception("Missing fields in request.");
+                    throw missingFields;
+                } else {
+                    request = this.getClient().preparePatch(restURL + endPoint).setBody(data);
+                    if ("json".equals(type)) {
+                        request = request.setHeader("Content-Type", "application/json; charset=UTF-8");
+                    } else if ("string".equals(type)) {
+                        request = request.setHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+                    } else if ("gov".equals(type)) {
+                        request = request.setHeader("Content-Type", "application/json; charset=UTF-8");
+                        request = request.setHeader("Accept", "application/json");
+                        request = request.setHeader("X-TenantID", "NONE");
+                    }
+
+                    if (this.getResponse() != null) {
+                        request = request.setCookies(this.getResponse().getCookies());
+                    }
+
+                    if (this.getSeleniumCookies().size() > 0) {
+                        for (org.openqa.selenium.Cookie cookie : this.getSeleniumCookies()) {
+                            request.addCookie(new Cookie(cookie.getName(), cookie.getValue(),
+                                    false, cookie.getDomain(), cookie.getPath(), 99, false, false));
+                        }
+                    }
+
+                    for (Cookie cook : this.getCookies()) {
+                        request = request.addCookie(cook);
+                    }
+
+                    if (!this.headers.isEmpty()) {
+                        for (Map.Entry<String, String> header : headers.entrySet()) {
+                            request = request.setHeader(header.getKey(), header.getValue());
+                        }
+                    }
+
+                    if (user != null) {
+                        request = request.setRealm(realm);
+                    }
+
+                    response = this.getClient().executeRequest(request.build());
+                    break;
+                }
+            case "CONNECT":
             case "HEAD":
             case "OPTIONS":
             case "REQUEST":
@@ -1354,7 +1398,8 @@ public class CommonG {
      * @throws Exception exception
      */
     @Deprecated
-    public Future<Response> generateRequest(String requestType, boolean secure, String endPoint, String data, String type, String codeBase64) throws Exception {
+    public Future<Response> generateRequest(String requestType, boolean secure, String endPoint, String data, String
+            type, String codeBase64) throws Exception {
         return generateRequest(requestType, false, null, null, endPoint, data, type, "");
     }
 
@@ -1374,7 +1419,8 @@ public class CommonG {
      * @throws InvocationTargetException exception
      */
 
-    public void setPreviousElement(String element, String value) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException, InstantiationException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException {
+    public void setPreviousElement(String element, String value) throws
+            NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException, InstantiationException, ClassNotFoundException, NoSuchMethodException, InvocationTargetException {
         Reflections reflections = new Reflections("com.stratio");
         Set classes = reflections.getSubTypesOf(CommonG.class);
 
@@ -1431,19 +1477,19 @@ public class CommonG {
         return seleniumCookies;
     }
 
+    public void setSeleniumCookies(Set<org.openqa.selenium.Cookie> cookies) {
+        this.seleniumCookies = cookies;
+    }
+
     public boolean cookieExists(String cookieName) {
         if (this.getSeleniumCookies() != null && this.getSeleniumCookies().size() != 0) {
-            for (org.openqa.selenium.Cookie cookie: this.getSeleniumCookies()) {
+            for (org.openqa.selenium.Cookie cookie : this.getSeleniumCookies()) {
                 if (cookie.getName().contains(cookieName)) {
                     return true;
                 }
             }
         }
         return false;
-    }
-
-    public void setSeleniumCookies(Set<org.openqa.selenium.Cookie> cookies) {
-        this.seleniumCookies = cookies;
     }
 
     public Map<String, String> getHeaders() {
@@ -1521,6 +1567,7 @@ public class CommonG {
 
     /**
      * Check if a string is a UUID
+     *
      * @param uuid - UUID value
      * @return true if it is a UUID or false if it is not an UUID
      */
@@ -1535,6 +1582,7 @@ public class CommonG {
 
     /**
      * Check is a String is a valid timestamp format
+     *
      * @param dateToValidate
      * @param dateFromat
      * @return true/false
@@ -1554,6 +1602,7 @@ public class CommonG {
         }
         return true;
     }
+
     /**
      * Checks the different results of a previous query to Cassandra database
      *
@@ -2133,7 +2182,8 @@ public class CommonG {
      * @param key:     server private key
      * @throws Exception exception     *
      */
-    public void connectToPostgreSQLDatabase(String database, String host, String port, String user, String password, Boolean secure, String ca, String crt, String key) throws SQLException {
+    public void connectToPostgreSQLDatabase(String database, String host, String port, String user, String
+            password, Boolean secure, String ca, String crt, String key) throws SQLException {
 
         if (port.startsWith("[")) {
             port = port.substring(1, port.length() - 1);
@@ -2194,7 +2244,7 @@ public class CommonG {
     /**
      * Generate deployment json from schema
      *
-     * @param schema        schema obtained from deploy-api
+     * @param schema schema obtained from deploy-api
      * @return JSONObject   deployment json
      */
     public JSONObject parseJSONSchema(JSONObject schema) throws Exception {
@@ -2222,7 +2272,7 @@ public class CommonG {
                 if (element.has("default")) {
                     // Add element with the default value assigned
                     json.put(key, element.get("default"));
-                // If it doesn't have default value, we assign a default value depending on the type
+                    // If it doesn't have default value, we assign a default value depending on the type
                 } else {
                     switch (element.getString("type")) {
                         case "string":
@@ -2231,14 +2281,15 @@ public class CommonG {
                         case "boolean":
                             json.put(key, false);
                             break;
-                        case "number": case "integer":
+                        case "number":
+                        case "integer":
                             json.put(key, 0);
                             break;
                         default:
                             Assertions.fail("type not expected");
                     }
                 }
-            // If it CONTAINS properties
+                // If it CONTAINS properties
             } else {
                 // Recursive call, keep evaluating json
                 json.put(key, parseJSONSchema(element));
@@ -2252,25 +2303,25 @@ public class CommonG {
      * Check json matches schema
      *
      * @param schema schema obtained from deploy-api
-     * @param json json to be checked
+     * @param json   json to be checked
      * @return boolean whether the json matches the schema or not
      */
     public boolean matchJsonToSchema(JSONObject schema, JSONObject json) throws Exception {
         SchemaLoader.builder()
-                 .useDefaults(true)
-                 .schemaJson(schema)
-                 .build()
-                 .load()
-                 .build()
-                 .validate(json);
+                .useDefaults(true)
+                .schemaJson(schema)
+                .build()
+                .load()
+                .build()
+                .validate(json);
         return true;
     }
 
     /**
      * Get service status
      *
-     * @param service   name of the service to be checked
-     * @param cluster   URI of the cluster
+     * @param service name of the service to be checked
+     * @param cluster URI of the cluster
      * @return String   normalized service status
      * @throws Exception exception     *
      */
@@ -2315,8 +2366,8 @@ public class CommonG {
     /**
      * Get service health status
      *
-     * @param service   name of the service to be checked
-     * @param cluster   URI of the cluster
+     * @param service name of the service to be checked
+     * @param cluster URI of the cluster
      * @return String   normalized service health status
      * @throws Exception exception     *
      */
