@@ -581,4 +581,25 @@ public class RestSpec extends BaseGSpec {
             fail("Error obtaining policies from gosecmanagement (Response code = " + commonspec.getResponse().getStatusCode() + ")");
         }
     }
+
+    @When("^I create tenant '(.+?)' if it does not exist based on '([^:]+?)'( as '(json|string|gov)')? with:$")
+    public void createTenant(String tenantId, String baseData, String type, DataTable modifications) throws Exception {
+        String endPoint = "/service/gosec-identities-daas/identities/tenants";
+        String endPointResource = endPoint + "/" + tenantId;
+        Integer expectedStatus = 201;
+        assertThat(commonspec.getRestHost().isEmpty() || commonspec.getRestPort().isEmpty());
+        sendRequestNoDataTable("GET", endPointResource, null, null, null);
+        if (commonspec.getResponse().getStatusCode() == 200) {
+            commonspec.getLogger().warn("Tenant {} already exist - not created", tenantId);
+        } else {
+            sendRequest("POST", endPoint, null, baseData, type, modifications);
+            try {
+                assertThat(commonspec.getResponse().getStatusCode()).isEqualTo(expectedStatus);
+            } catch (Exception e) {
+                commonspec.getLogger().warn("Error creating Tenant {}: {}", tenantId, commonspec.getResponse().getResponse());
+                throw e;
+            }
+        }
+    }
+
 }
