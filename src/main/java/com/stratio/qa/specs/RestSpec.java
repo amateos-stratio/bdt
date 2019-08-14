@@ -255,11 +255,12 @@ public class RestSpec extends BaseGSpec {
         String endPointResource = endPoint + resourceId;
         String endPointPolicy = "/service/gosecmanagement/api/policy";
         String endPointPolicies = "/service/gosecmanagement/api/policies";
+        String newEndPoint = "";
 
         if (endPoint.contains("id")) {
-            endPoint = endPoint.replace("?id=", "");
+            newEndPoint = endPoint.replace("?id=", "");
         } else {
-            endPoint = endPoint.substring(0, endPoint.length() - 1);
+            newEndPoint = endPoint.substring(0, endPoint.length() - 1);
         }
 
         try {
@@ -272,7 +273,7 @@ public class RestSpec extends BaseGSpec {
                     String policyId = commonspec.getCommandResult().trim();
                     if (!policyId.equals("")) {
                         commonspec.getLogger().debug("PolicyId obtained: {}", policyId);
-                        endPointResource = endPoint + "/" + policyId;
+                        endPointResource = newEndPoint + "/" + policyId;
                     }
                 } else {
                     if (commonspec.getResponse().getStatusCode() == 404) {
@@ -283,7 +284,7 @@ public class RestSpec extends BaseGSpec {
                             String policyId = commonspec.getCommandResult().trim();
                             if (!policyId.equals("")) {
                                 commonspec.getLogger().debug("PolicyId obtained: {}", policyId);
-                                endPointResource = endPoint + "/?id=" + policyId;
+                                endPointResource = newEndPoint + "?id=" + policyId;
                             }
                         }
                     }
@@ -293,7 +294,7 @@ public class RestSpec extends BaseGSpec {
             sendRequestNoDataTable("GET", endPointResource, loginInfo, null, null);
 
             if (commonspec.getResponse().getStatusCode() != 200) {
-                sendRequest("POST", endPoint, loginInfo, baseData, type, modifications);
+                sendRequest("POST", newEndPoint, loginInfo, baseData, type, modifications);
                 try {
                     if (commonspec.getResponse().getStatusCode() == 409) {
                         commonspec.getLogger().warn("The resource {} already exists", resourceId);
@@ -376,7 +377,7 @@ public class RestSpec extends BaseGSpec {
                             String policyId = commonspec.getCommandResult().trim();
                             if (!policyId.equals("")) {
                                 commonspec.getLogger().debug("PolicyId obtained: {}", policyId);
-                                endPointResource = endPoint + "/?id=" + policyId;
+                                endPointResource = endPoint + "?id=" + policyId;
                             }
                         }
                     }
