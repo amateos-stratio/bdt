@@ -256,6 +256,8 @@ public class RestSpec extends BaseGSpec {
 
         if (endPoint.contains("id")) {
             endPoint = endPoint.replace("?id=", "");
+        } else {
+            endPoint = endPoint.substring(0, endPoint.length() - 1);
         }
 
         try {
@@ -332,6 +334,8 @@ public class RestSpec extends BaseGSpec {
 
         if (endPoint.contains("id")) {
             endPoint = endPoint.replace("?id=", "");
+        } else {
+            endPoint = endPoint.substring(0, endPoint.length() - 1);
         }
 
         try {
