@@ -252,7 +252,11 @@ public class RestSpec extends BaseGSpec {
     private void createResourceIfNotExist(String resource, String resourceId, String endPoint, String loginInfo, boolean doesNotExist, String baseData, String type, DataTable modifications) throws Exception {
         Integer expectedStatusCreate = 201;
         Integer expectedStatusDelete = 200;
-        String endPointResource = endPoint + "/" + resourceId;
+        String endPointResource = endPoint + resourceId;
+
+        if (endPoint.contains("id")) {
+            endPoint = endPoint.replace("?id=", "");
+        }
 
         try {
             assertThat(commonspec.getRestHost().isEmpty() || commonspec.getRestPort().isEmpty());
@@ -324,7 +328,11 @@ public class RestSpec extends BaseGSpec {
     @When("^I delete '(policy|user|group)' '(.+?)' using API service path '(.+?)'( with user and password '(.+:.+?)')? if it exists$")
     public void deleteUserIfExists(String resource, String resourceId, String endPoint, String loginInfo) throws Exception {
         Integer expectedStatusDelete = 200;
-        String endPointResource = endPoint + "/" + resourceId;
+        String endPointResource = endPoint + resourceId;
+
+        if (endPoint.contains("id")) {
+            endPoint = endPoint.replace("?id=", "");
+        }
 
         try {
             assertThat(commonspec.getRestHost().isEmpty() || commonspec.getRestPort().isEmpty());
@@ -569,6 +577,7 @@ public class RestSpec extends BaseGSpec {
     @When("^I get id from policy with name '(.+?)' and save it in environment variable '(.+?)'$")
     public void getPolicyId(String policyName, String envVar) throws Exception {
         String endPoint = "/service/gosecmanagement/api/policy";
+        String newEndPoint = "/service/gosecmanagement/api/policies";
         assertThat(commonspec.getRestHost().isEmpty() || commonspec.getRestPort().isEmpty());
         sendRequestNoDataTable("GET", endPoint, null, null, null);
         if (commonspec.getResponse().getStatusCode() == 200) {
@@ -578,7 +587,21 @@ public class RestSpec extends BaseGSpec {
                 fail("Error obtaining ID from policy " + policyName);
             }
         } else {
-            fail("Error obtaining policies from gosecmanagement (Response code = " + commonspec.getResponse().getStatusCode() + ")");
+            if (commonspec.getResponse().getStatusCode() == 404) {
+                commonspec.getLogger().warn("Error 404 accesing endpoint {}: checking the new endpoint for Gosec 1.1.1", endPoint);
+                sendRequestNoDataTable("GET", newEndPoint, null, null, null);
+                if (commonspec.getResponse().getStatusCode() == 200) {
+                    commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.list[] | select (.name == \"" + policyName + "\").id' | sed s/\\\"//g");
+                    commonspec.runCommandLoggerAndEnvVar(0, envVar, Boolean.TRUE);
+                    if (ThreadProperty.get(envVar) == null || ThreadProperty.get(envVar).trim().equals("")) {
+                        fail("Error obtaining ID from policy " + policyName);
+                    }
+                } else {
+                    fail("Error obtaining policies from gosecmanagement /api/policies (Response code = " + commonspec.getResponse().getStatusCode() + ")");
+                }
+            } else {
+                fail("Error obtaining policies from gosecmanagement /api/policy (Response code = " + commonspec.getResponse().getStatusCode() + ")");
+            }
         }
     }
 
