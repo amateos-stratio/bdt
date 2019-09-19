@@ -623,7 +623,7 @@ public class RestSpec extends BaseGSpec {
             endPoint = "/service/gosecmanagement/api/policy/tag";
             newEndPoint = "/service/gosecmanagement/api/policies/tags";
             errorMessage = "api/policies/tags";
-            errorMessage2 = "api/policies/tags";
+            errorMessage2 = "api/policy/tag";
         }
         assertThat(commonspec.getRestHost().isEmpty() || commonspec.getRestPort().isEmpty());
         sendRequestNoDataTable("GET", endPoint, null, null, null);
