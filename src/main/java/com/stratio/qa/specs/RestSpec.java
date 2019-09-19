@@ -643,6 +643,37 @@ public class RestSpec extends BaseGSpec {
         }
     }
 
+    @When("^I get id from tag policy with name '(.+?)' and save it in environment variable '(.+?)'$")
+    public void getTagPolicyId(String policyName, String envVar) throws Exception {
+        String endPoint = "/service/gosecmanagement/api/policy/tag";
+        String newEndPoint = "/service/gosecmanagement/api/policies/tags";
+        assertThat(commonspec.getRestHost().isEmpty() || commonspec.getRestPort().isEmpty());
+        sendRequestNoDataTable("GET", endPoint, null, null, null);
+        if (commonspec.getResponse().getStatusCode() == 200) {
+            commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.list[] | select (.name == \"" + policyName + "\").id' | sed s/\\\"//g");
+            commonspec.runCommandLoggerAndEnvVar(0, envVar, Boolean.TRUE);
+            if (ThreadProperty.get(envVar) == null || ThreadProperty.get(envVar).trim().equals("")) {
+                fail("Error obtaining ID from policy " + policyName);
+            }
+        } else {
+            if (commonspec.getResponse().getStatusCode() == 404) {
+                commonspec.getLogger().warn("Error 404 accesing endpoint {}: checking the new endpoint for Gosec 1.1.1", endPoint);
+                sendRequestNoDataTable("GET", newEndPoint, null, null, null);
+                if (commonspec.getResponse().getStatusCode() == 200) {
+                    commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.list[] | select (.name == \"" + policyName + "\").id' | sed s/\\\"//g");
+                    commonspec.runCommandLoggerAndEnvVar(0, envVar, Boolean.TRUE);
+                    if (ThreadProperty.get(envVar) == null || ThreadProperty.get(envVar).trim().equals("")) {
+                        fail("Error obtaining ID from policy " + policyName);
+                    }
+                } else {
+                    fail("Error obtaining policies from gosecmanagement /api/policies/tags (Response code = " + commonspec.getResponse().getStatusCode() + ")");
+                }
+            } else {
+                fail("Error obtaining policies from gosecmanagement /api/policy/tag (Response code = " + commonspec.getResponse().getStatusCode() + ")");
+            }
+        }
+    }
+
     @When("^I create tenant '(.+?)' if it does not exist based on '([^:]+?)'( as '(json|string|gov)')? with:$")
     public void createTenant(String tenantId, String baseData, String type, DataTable modifications) throws Exception {
         String endPoint = "/service/gosec-identities-daas/identities/tenants";
