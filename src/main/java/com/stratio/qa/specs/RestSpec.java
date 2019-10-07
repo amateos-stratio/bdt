@@ -280,7 +280,7 @@ public class RestSpec extends BaseGSpec {
                     }
                 } else {
                     if (commonspec.getResponse().getStatusCode() == 404) {
-                        commonspec.getLogger().warn("Error 404 accesing endpoint {}: checking the new endpoint for Gosec 1.1.1", endPointPolicy);
+                        commonspec.getLogger().warn("Error 404 accessing endpoint {}: checking the new endpoint for Gosec 1.1.1", endPointPolicy);
                         sendRequestNoDataTable("GET", endPointPolicies, loginInfo, null, null);
                         if (commonspec.getResponse().getStatusCode() == 200) {
                             commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.list[] | select (.name == \"" + resourceId + "\").id' | sed s/\\\"//g");
@@ -373,7 +373,7 @@ public class RestSpec extends BaseGSpec {
                     }
                 } else {
                     if (commonspec.getResponse().getStatusCode() == 404) {
-                        commonspec.getLogger().warn("Error 404 accesing endpoint {}: checking the new endpoint for Gosec 1.1.1", endPointPolicy);
+                        commonspec.getLogger().warn("Error 404 accessing endpoint {}: checking the new endpoint for Gosec 1.1.1", endPointPolicy);
                         sendRequestNoDataTable("GET", endPointPolicies, loginInfo, null, null);
                         if (commonspec.getResponse().getStatusCode() == 200) {
                             commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.list[] | select (.name == \"" + resourceId + "\").id' | sed s/\\\"//g");
@@ -635,7 +635,7 @@ public class RestSpec extends BaseGSpec {
             }
         } else {
             if (commonspec.getResponse().getStatusCode() == 404) {
-                commonspec.getLogger().warn("Error 404 accesing endpoint {}: checking the new endpoint for Gosec 1.1.1", endPoint);
+                commonspec.getLogger().warn("Error 404 accessing endpoint {}: checking the new endpoint for Gosec 1.1.1", endPoint);
                 sendRequestNoDataTable("GET", newEndPoint, null, null, null);
                 if (commonspec.getResponse().getStatusCode() == 200) {
                     commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.list[] | select (.name == \"" + policyName + "\").id' | sed s/\\\"//g");
@@ -710,6 +710,23 @@ public class RestSpec extends BaseGSpec {
             }
         } else {
             throw new Exception("Error obtaining " + resource + "s - Status code: " + commonspec.getResponse().getStatusCode());
+        }
+    }
+
+    @When("^I get id from profile with name '(.+?)' and save it in environment variable '(.+?)'$")
+    public void getProfiled(String profileName, String envVar) throws Exception {
+        String endPoint = "/service/gosec-identities-daas/identities/profiles";
+
+        assertThat(commonspec.getRestHost().isEmpty() || commonspec.getRestPort().isEmpty());
+        sendRequestNoDataTable("GET", endPoint, null, null, null);
+        if (commonspec.getResponse().getStatusCode() == 200) {
+            commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.list[] | select (.name == \"" + profileName + "\").pid' | sed s/\\\"//g");
+            commonspec.runCommandLoggerAndEnvVar(0, envVar, Boolean.TRUE);
+            if (ThreadProperty.get(envVar) == null || ThreadProperty.get(envVar).trim().equals("")) {
+                fail("Error obtaining ID from profile " + profileName);
+            }
+        } else {
+            commonspec.getLogger().warn("Profile with id:{} does not exist", profileName);
         }
     }
 }
