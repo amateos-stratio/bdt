@@ -726,7 +726,7 @@ public class RestSpec extends BaseGSpec {
                 fail("Error obtaining ID from profile " + profileName);
             }
         } else {
-            commonspec.getLogger().warn("Profile with id:{} does not exist", profileName);
+            commonspec.getLogger().warn("Profile with id: {} does not exist", profileName);
         }
     }
 }
