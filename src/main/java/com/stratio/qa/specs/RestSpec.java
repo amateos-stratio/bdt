@@ -350,7 +350,7 @@ public class RestSpec extends BaseGSpec {
      */
     @When("^I delete '(policy|user|group)' '(.+?)' using API service path '(.+?)'( with user and password '(.+:.+?)')? if it exists$")
     public void deleteUserIfExists(String resource, String resourceId, String endPoint, String loginInfo) throws Exception {
-        Integer expectedStatusDelete = 200;
+        Integer[] expectedStatusDelete = {200, 204};
         String endPointResource = endPoint + resourceId;
         String endPointPolicy = "/service/gosecmanagement/api/policy";
         String endPointPolicies = "/service/gosecmanagement/api/policies";
@@ -397,7 +397,7 @@ public class RestSpec extends BaseGSpec {
                 commonspec.getLogger().debug("Resource {} deleted", resourceId);
 
                 try {
-                    assertThat(commonspec.getResponse().getStatusCode()).isEqualTo(expectedStatusDelete);
+                    assertThat(commonspec.getResponse().getStatusCode()).isIn(expectedStatusDelete);
                 } catch (Exception e) {
                     commonspec.getLogger().warn("Error deleting Resource {}: {}", resourceId, commonspec.getResponse().getResponse());
                     throw e;
