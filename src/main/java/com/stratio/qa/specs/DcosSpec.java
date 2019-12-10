@@ -250,11 +250,11 @@ public class DcosSpec extends BaseGSpec {
         }
         String result = "";
         for (String ips : datacentersDistribution.keySet()) {
-            String key = ips.toString();
-            String value = datacentersDistribution.get(key).toString();
+            String key = ips;
+            String value = datacentersDistribution.get(key);
             result = result + ";" + value;
         }
-        return result.substring(1, result.length());
+        return result.substring(1);
     }
 
     /**
@@ -688,7 +688,7 @@ public class DcosSpec extends BaseGSpec {
         Assertions.assertThat(service).overridingErrorMessage("Error while parsing arguments. The service must be one of them: [community, pbd, zookeeper, ignite, kubernetes, etcd, arangodb]").isIn("community", "zookeeper", "pbd", "ignite", "kubernetes", "etcd", "arangodb");
         int pos = selectExhibitorRole(role, service);
         Assertions.assertThat(pos).overridingErrorMessage("Error while parsing arguments. The role " + role + " of the service " + service + " doesn't exist").isNotEqualTo(-1);
-        commandexecutionspec.executeLocalCommand("echo '" + ThreadProperty.get("exhibitor_answer") + "' | jq '.phases[" + Integer.toString(pos) + "].\"000" + Integer.toString(pos + 1) + "\".steps[][] | select(.status | contains(\"RUNNING\"))." + element + "' | sed 's/\"//g'", "0", "elementsConstraint");
+        commandexecutionspec.executeLocalCommand("echo '" + ThreadProperty.get("exhibitor_answer") + "' | jq '.phases[" + pos + "].\"000" + (pos + 1) + "\".steps[][] | select(.status | contains(\"RUNNING\"))." + element + "' | sed 's/\"//g'", "0", "elementsConstraint");
     }
 
     public void checkConstraintType(String role, String instance, String tag, String constraint, String value, String[] elements) throws Exception {
@@ -1024,6 +1024,7 @@ public class DcosSpec extends BaseGSpec {
         String varPublicNode = "PUBLIC_NODE";
         String varAccessPoint = "EOS_ACCESS_POINT";
         String vaultTokenJQ = "jq -cMr .root_token";
+        String varRealm = "EOS_REALM";
         // LDAP values
         String varLDAPurl = "LDAP_URL";
         String varLDAPport = "LDAP_PORT";
@@ -1032,7 +1033,7 @@ public class DcosSpec extends BaseGSpec {
         String varLDAPbase = "LDAP_BASE";
         String varLDAPadminGroup = "LDAP_ADMIN_GROUP";
 
-        String[] vars = {varClusterID, varClusterDomain, varInternalDomain, varIp, varAdminUser, varTenant, varVaultHost, varVaultToken, varPublicNode, varAccessPoint, varLDAPurl, varLDAPport, varLDAPuserDn, varLDAPgroupDn, varLDAPbase, varLDAPadminGroup};
+        String[] vars = {varClusterID, varClusterDomain, varInternalDomain, varIp, varAdminUser, varTenant, varVaultHost, varVaultToken, varPublicNode, varAccessPoint, varRealm, varLDAPurl, varLDAPport, varLDAPuserDn, varLDAPgroupDn, varLDAPbase, varLDAPadminGroup};
         boolean bootstrapInfoObtained = true;
 
         if (force != null) {
@@ -1054,6 +1055,7 @@ public class DcosSpec extends BaseGSpec {
             obtainInfoFromDescriptor("ADMIN_USER", varAdminUser);
             obtainInfoFromDescriptor("TENANT", varTenant);
             obtainInfoFromDescriptor("VAULT_HOST", varVaultHost);
+            obtainInfoFromDescriptor("REALM", varRealm);
             obtainInfoFromFile(vaultTokenJQ, this.vaultResponsePath, varVaultToken);
             commonspec.getRemoteSSHConnection().runCommand("set -o pipefail && cat " + this.descriptorPath + " | " + "jq -crM '.nodes[] | select((.role ?== \"agent\") and .public ?== true)'" + " | " + "wc -l");
             if (!(commonspec.getRemoteSSHConnection().getResult().equals("0"))) {
