@@ -739,7 +739,6 @@ public class RestSpec extends BaseGSpec {
         String newEndPoint = "/service/gosecmanagement/api/policies";
         String errorMessage = "api/policies";
         String errorMessage2 = "api/policy";
-        String value = "";
 
         if (tag != null) {
             endPoint = "/service/gosecmanagement/api/policy/tag";
@@ -750,11 +749,12 @@ public class RestSpec extends BaseGSpec {
         assertThat(commonspec.getRestHost().isEmpty() || commonspec.getRestPort().isEmpty());
         sendRequestNoDataTable("GET", endPoint, null, null, null);
         if (commonspec.getResponse().getStatusCode() == 200) {
-            commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.list[] | select (.name == \"" + policyName + "\")'");
-            value = commonspec.getCommandResult();
+            commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.list[] | select (.name == \"" + policyName + "\").id' | sed s/\\\"//g");
+            sendRequestNoDataTable("GET", "/service/gosecmanagement/api/policy/" + commonspec.getCommandResult(), null, null, null);
 
             if (envVar != null) {
-                commonspec.runCommandLoggerAndEnvVar(0, envVar, Boolean.TRUE);
+                ThreadProperty.set(envVar, commonspec.getResponse().getResponse().toString());
+
                 if (ThreadProperty.get(envVar) == null || ThreadProperty.get(envVar).trim().equals("")) {
                     fail("Error obtaining JSON from policy " + policyName);
                 }
@@ -768,7 +768,7 @@ public class RestSpec extends BaseGSpec {
                 // Note that this Writer will delete the file if it exists
                 Writer out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(absolutePathFile), StandardCharsets.UTF_8));
                 try {
-                    out.write(value);
+                    out.write(commonspec.getResponse().getResponse());
                 } catch (Exception e) {
                     commonspec.getLogger().error("Custom file {} hasn't been created:\n{}", absolutePathFile, e.toString());
                 } finally {
@@ -783,11 +783,11 @@ public class RestSpec extends BaseGSpec {
                 commonspec.getLogger().warn("Error 404 accessing endpoint {}: checking the new endpoint for Gosec 1.1.1", endPoint);
                 sendRequestNoDataTable("GET", newEndPoint, null, null, null);
                 if (commonspec.getResponse().getStatusCode() == 200) {
-                    commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.list[] | select (.name == \"" + policyName + "\")'");
-                    value = commonspec.getCommandResult();
+                    commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.list[] | select (.name == \"" + policyName + "\").id' | sed s/\\\"//g");
+                    sendRequestNoDataTable("GET", "/service/gosecmanagement/api/policy?id=" + commonspec.getCommandResult(), null, null, null);
 
                     if (envVar != null) {
-                        commonspec.runCommandLoggerAndEnvVar(0, envVar, Boolean.TRUE);
+                        ThreadProperty.set(envVar, commonspec.getResponse().getResponse().toString());
                         if (ThreadProperty.get(envVar) == null || ThreadProperty.get(envVar).trim().equals("")) {
                             fail("Error obtaining JSON from policy " + policyName);
                         }
@@ -801,7 +801,7 @@ public class RestSpec extends BaseGSpec {
                         // Note that this Writer will delete the file if it exists
                         Writer out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(absolutePathFile), StandardCharsets.UTF_8));
                         try {
-                            out.write(value);
+                            out.write(commonspec.getResponse().getResponse());
                         } catch (Exception e) {
                             commonspec.getLogger().error("Custom file {} hasn't been created:\n{}", absolutePathFile, e.toString());
                         } finally {
