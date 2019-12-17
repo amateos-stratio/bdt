@@ -29,6 +29,7 @@ import org.hjson.JsonValue;
 import org.json.JSONArray;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.concurrent.Future;
 import java.util.regex.Pattern;
@@ -120,7 +121,7 @@ public class RestSpec extends BaseGSpec {
 
         // Modify data
         commonspec.getLogger().debug("Modifying data {} as {}", retrievedData, type);
-        String modifiedData = commonspec.modifyData(retrievedData, type, modifications).toString();
+        String modifiedData = commonspec.modifyData(retrievedData, type, modifications);
 
         Boolean searchUntilContains;
         if (contains == null || contains.isEmpty()) {
@@ -209,13 +210,13 @@ public class RestSpec extends BaseGSpec {
 
         // Modify data
         commonspec.getLogger().debug("Modifying data {} as {}", retrievedData, type);
-        String modifiedData = commonspec.modifyData(retrievedData, type, modifications).toString();
+        String modifiedData = commonspec.modifyData(retrievedData, type, modifications);
 
         String user = null;
         String password = null;
         if (loginInfo != null) {
             user = loginInfo.substring(0, loginInfo.indexOf(':'));
-            password = loginInfo.substring(loginInfo.indexOf(':') + 1, loginInfo.length());
+            password = loginInfo.substring(loginInfo.indexOf(':') + 1);
         }
 
 
@@ -430,7 +431,7 @@ public class RestSpec extends BaseGSpec {
 
         if (loginInfo != null) {
             user = loginInfo.substring(0, loginInfo.indexOf(':'));
-            password = loginInfo.substring(loginInfo.indexOf(':') + 1, loginInfo.length());
+            password = loginInfo.substring(loginInfo.indexOf(':') + 1);
         }
 
         if (baseData != null) {
@@ -594,11 +595,11 @@ public class RestSpec extends BaseGSpec {
 
             if (fileName != null) {
                 // Create file (temporary) and set path to be accessible within test
-                File tempDirectory = new File(String.valueOf(System.getProperty("user.dir") + "/target/test-classes/"));
+                File tempDirectory = new File(System.getProperty("user.dir") + "/target/test-classes/");
                 String absolutePathFile = tempDirectory.getAbsolutePath() + "/" + fileName;
                 commonspec.getLogger().debug("Creating file {} in 'target/test-classes'", absolutePathFile);
                 // Note that this Writer will delete the file if it exists
-                Writer out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(absolutePathFile), "UTF-8"));
+                Writer out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(absolutePathFile), StandardCharsets.UTF_8));
                 try {
                     out.write(value);
                 } catch (Exception e) {
@@ -729,6 +730,93 @@ public class RestSpec extends BaseGSpec {
             }
         } else {
             commonspec.getLogger().warn("Profile with id: {} does not exist", profileName);
+        }
+    }
+
+    @When("^I get json from( tag)? policy with name '(.+?)' and save it( in environment variable '(.*?)')?( in file '(.*?)')?$")
+    public void getPolicyJson(String tag, String policyName, String envVar, String fileName) throws Exception {
+        String endPoint = "/service/gosecmanagement/api/policy";
+        String newEndPoint = "/service/gosecmanagement/api/policies";
+        String errorMessage = "api/policies";
+        String errorMessage2 = "api/policy";
+        String value = "";
+
+        if (tag != null) {
+            endPoint = "/service/gosecmanagement/api/policy/tag";
+            newEndPoint = "/service/gosecmanagement/api/policies/tags";
+            errorMessage = "api/policies/tags";
+            errorMessage2 = "api/policy/tag";
+        }
+        assertThat(commonspec.getRestHost().isEmpty() || commonspec.getRestPort().isEmpty());
+        sendRequestNoDataTable("GET", endPoint, null, null, null);
+        if (commonspec.getResponse().getStatusCode() == 200) {
+            commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.list[] | select (.name == \"" + policyName + "\")'");
+            value = commonspec.getCommandResult();
+
+            if (envVar != null) {
+                commonspec.runCommandLoggerAndEnvVar(0, envVar, Boolean.TRUE);
+                if (ThreadProperty.get(envVar) == null || ThreadProperty.get(envVar).trim().equals("")) {
+                    fail("Error obtaining JSON from policy " + policyName);
+                }
+            }
+
+            if (fileName != null) {
+                // Create file (temporary) and set path to be accessible within test
+                File tempDirectory = new File(System.getProperty("user.dir") + "/target/test-classes/");
+                String absolutePathFile = tempDirectory.getAbsolutePath() + "/" + fileName;
+                commonspec.getLogger().debug("Creating file {} in 'target/test-classes'", absolutePathFile);
+                // Note that this Writer will delete the file if it exists
+                Writer out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(absolutePathFile), StandardCharsets.UTF_8));
+                try {
+                    out.write(value);
+                } catch (Exception e) {
+                    commonspec.getLogger().error("Custom file {} hasn't been created:\n{}", absolutePathFile, e.toString());
+                } finally {
+                    out.close();
+                }
+
+                Assertions.assertThat(new File(absolutePathFile).isFile());
+            }
+
+        } else {
+            if (commonspec.getResponse().getStatusCode() == 404) {
+                commonspec.getLogger().warn("Error 404 accessing endpoint {}: checking the new endpoint for Gosec 1.1.1", endPoint);
+                sendRequestNoDataTable("GET", newEndPoint, null, null, null);
+                if (commonspec.getResponse().getStatusCode() == 200) {
+                    commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.list[] | select (.name == \"" + policyName + "\")'");
+                    value = commonspec.getCommandResult();
+
+                    if (envVar != null) {
+                        commonspec.runCommandLoggerAndEnvVar(0, envVar, Boolean.TRUE);
+                        if (ThreadProperty.get(envVar) == null || ThreadProperty.get(envVar).trim().equals("")) {
+                            fail("Error obtaining JSON from policy " + policyName);
+                        }
+                    }
+
+                    if (fileName != null) {
+                        // Create file (temporary) and set path to be accessible within test
+                        File tempDirectory = new File(System.getProperty("user.dir") + "/target/test-classes/");
+                        String absolutePathFile = tempDirectory.getAbsolutePath() + "/" + fileName;
+                        commonspec.getLogger().debug("Creating file {} in 'target/test-classes'", absolutePathFile);
+                        // Note that this Writer will delete the file if it exists
+                        Writer out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(absolutePathFile), StandardCharsets.UTF_8));
+                        try {
+                            out.write(value);
+                        } catch (Exception e) {
+                            commonspec.getLogger().error("Custom file {} hasn't been created:\n{}", absolutePathFile, e.toString());
+                        } finally {
+                            out.close();
+                        }
+
+                        Assertions.assertThat(new File(absolutePathFile).isFile());
+                    }
+
+                } else {
+                    fail("Error obtaining policies from gosecmanagement {} (Response code = " + commonspec.getResponse().getStatusCode() + ")", errorMessage);
+                }
+            } else {
+                fail("Error obtaining policies from gosecmanagement {} (Response code = " + commonspec.getResponse().getStatusCode() + ")", errorMessage2);
+            }
         }
     }
 }
