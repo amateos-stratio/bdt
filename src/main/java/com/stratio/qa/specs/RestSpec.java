@@ -45,8 +45,6 @@ import static org.assertj.core.api.Assertions.fail;
  */
 public class RestSpec extends BaseGSpec {
 
-    private int i;
-
     /**
      * Generic constructor.
      *
@@ -1004,7 +1002,7 @@ public class RestSpec extends BaseGSpec {
                 putObject.remove(groups);
                 putObject.remove(roles);
 
-                for (i = 0; i < jsonGroups.size(); i++) {
+                for (int i = 0; i < jsonGroups.size(); i++) {
                     String jsonIds = ((JsonObject) jsonGroups.get(i)).getString("id", "");
 
                     if (jsonIds.equals(groupId)) {
