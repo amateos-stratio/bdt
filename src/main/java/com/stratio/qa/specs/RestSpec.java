@@ -27,6 +27,7 @@ import org.hjson.JsonArray;
 import org.hjson.JsonObject;
 import org.hjson.JsonValue;
 import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -43,6 +44,8 @@ import static org.assertj.core.api.Assertions.fail;
  * @see <a href="RestSpec-annotations.html">REST Steps &amp; Matching Regex</a>
  */
 public class RestSpec extends BaseGSpec {
+
+    private int i;
 
     /**
      * Generic constructor.
@@ -795,7 +798,7 @@ public class RestSpec extends BaseGSpec {
             sendRequestNoDataTable("GET", "/service/gosecmanagement/api/policy/" + commonspec.getCommandResult(), null, null, null);
 
             if (envVar != null) {
-                ThreadProperty.set(envVar, commonspec.getResponse().getResponse().toString());
+                ThreadProperty.set(envVar, commonspec.getResponse().getResponse());
 
                 if (ThreadProperty.get(envVar) == null || ThreadProperty.get(envVar).trim().equals("")) {
                     fail("Error obtaining JSON from policy " + policyName);
@@ -832,7 +835,7 @@ public class RestSpec extends BaseGSpec {
                     sendRequestNoDataTable("GET", "/service/gosecmanagement/api/policy?id=" + commonspec.getCommandResult(), null, null, null);
 
                     if (envVar != null) {
-                        ThreadProperty.set(envVar, commonspec.getResponse().getResponse().toString());
+                        ThreadProperty.set(envVar, commonspec.getResponse().getResponse());
                         if (ThreadProperty.get(envVar) == null || ThreadProperty.get(envVar).trim().equals("")) {
                             fail("Error obtaining JSON from policy " + policyName);
                         }
@@ -871,17 +874,21 @@ public class RestSpec extends BaseGSpec {
         String secretTypeAux;
         String urlParams;
         switch (secretType) {
-            case "certificate": urlParams = getCertificateUrlParams(secret, path, cn, name, alt, organizationName);
-                                secretTypeAux = "certificates";
-                                break;
-            case "keytab":  urlParams = getKeytabUrlParams(secret, path, name, principal, realm);
-                            secretTypeAux = "kerberos";
-                            break;
-            case "password":    urlParams = getPasswordUrlParams(secret, path, name, user, password);
-                                secretTypeAux = "passwords";
-                                break;
-            default:    urlParams = "";
-                        secretTypeAux = "default";
+            case "certificate":
+                urlParams = getCertificateUrlParams(secret, path, cn, name, alt, organizationName);
+                secretTypeAux = "certificates";
+                break;
+            case "keytab":
+                urlParams = getKeytabUrlParams(secret, path, name, principal, realm);
+                secretTypeAux = "kerberos";
+                break;
+            case "password":
+                urlParams = getPasswordUrlParams(secret, path, name, user, password);
+                secretTypeAux = "passwords";
+                break;
+            default:
+                urlParams = "";
+                secretTypeAux = "default";
         }
         if (force != null) {
             String pathAux = path != null ? path.replaceAll("/", "%2F") + secret : "%2Fuserland%2F" + secretTypeAux + "%2F" + secret;
@@ -918,13 +925,17 @@ public class RestSpec extends BaseGSpec {
         String baseUrl = "/service/deploy-api/secrets";
         String secretTypeAux;
         switch (secretType) {
-            case "certificate": secretTypeAux = "certificates";
-                                break;
-            case "keytab":  secretTypeAux = "kerberos";
-                            break;
-            case "password":    secretTypeAux = "passwords";
-                                break;
-            default: secretTypeAux = "default";
+            case "certificate":
+                secretTypeAux = "certificates";
+                break;
+            case "keytab":
+                secretTypeAux = "kerberos";
+                break;
+            case "password":
+                secretTypeAux = "passwords";
+                break;
+            default:
+                secretTypeAux = "default";
         }
         String pathAux = path != null ? path.replaceAll("/", "%2F") + secret : "%2Fuserland%2F" + secretTypeAux + "%2F" + secret;
         sendRequestNoDataTable("DELETE", baseUrl + "?path=" + pathAux, null, null, null);
@@ -963,6 +974,69 @@ public class RestSpec extends BaseGSpec {
         String userAux = user != null ? user : secret;
         String passwordAux = password != null ? password : secret;
         return "?path=" + pathAux + "&name=" + nameAux + "&password=" + passwordAux + "&user=" + userAux;
+    }
+
+    @When("^I include group '(.+?)' in profile '(.+?)'$")
+    public void includeGroupInProfile(String groupId, String profileId) throws Exception {
+        String endPointGetGroup = "/service/gosecmanagement/api/group?id=" + groupId;
+        String endPointGetProfile = "/service/gosecmanagement/api/profile?id=" + profileId;
+        String groups = "groups";
+        String pid = "pid";
+        String id = "id";
+        String roles = "roles";
+        Boolean content = false;
+
+        assertThat(commonspec.getRestHost().isEmpty() || commonspec.getRestPort().isEmpty());
+
+        sendRequestNoDataTable("GET", endPointGetGroup, null, null, null);
+        if (commonspec.getResponse().getStatusCode() == 200) {
+            JsonObject jsonGroupInfo = new JsonObject(JsonValue.readHjson(commonspec.getResponse().getResponse()).asObject());
+            sendRequestNoDataTable("GET", endPointGetProfile, null, null, null);
+            if (commonspec.getResponse().getStatusCode() == 200) {
+                JsonObject jsonProfileInfo = new JsonObject(JsonValue.readHjson(commonspec.getResponse().getResponse()).asObject());
+                //Get groups from profile
+                JsonArray jsonGroups = (JsonArray) jsonProfileInfo.get(groups);
+                //Get size of groups
+                String[] stringGroups = new String[jsonGroups.size() + 1];
+                //Create json for put
+                JSONObject putObject = new JSONObject(commonspec.getResponse().getResponse());
+                //Remove groups and roles in json
+                putObject.remove(groups);
+                putObject.remove(roles);
+
+                for (i = 0; i < jsonGroups.size(); i++) {
+                    String jsonIds = ((JsonObject) jsonGroups.get(i)).getString("id", "");
+
+                    if (jsonIds.equals(groupId)) {
+                        commonspec.getLogger().warn("{} is already included in the profile {}", groupId, profileId);
+                        content = true;
+                        break;
+                    } else {
+                        stringGroups[i] = jsonIds;
+                    }
+                }
+
+                if (!content) {
+                    //Add new group in array of gids
+                    stringGroups[jsonGroups.size()] = groupId;
+                    //Add gids array to new json for PUT request
+                    putObject.put("gids", stringGroups);
+
+                    commonspec.getLogger().warn("Json for PUT request---> {}", putObject.toString());
+                    Future<Response> response = commonspec.generateRequest("PUT", false, null, null, endPointGetProfile, JsonValue.readHjson(putObject.toString()).toString(), "json", "");
+                    commonspec.setResponse("PUT", response.get());
+                    if (commonspec.getResponse().getStatusCode() != 204) {
+                        throw new Exception("Error adding Group: " + groupId + " in Profile " + profileId + " - Status code: " + commonspec.getResponse().getStatusCode());
+                    }
+                }
+
+            } else {
+                throw new Exception("Error obtaining Profile: " + profileId + "- Status code: " + commonspec.getResponse().getStatusCode());
+            }
+
+        } else {
+            throw new Exception("Error obtaining Group: " + groupId + "- Status code: " + commonspec.getResponse().getStatusCode());
+        }
     }
 
 }
