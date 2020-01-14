@@ -690,14 +690,12 @@ public class DcosSpec extends BaseGSpec {
 
     public void selectElements(String role, String service, String element, String elementValue, String envValue) throws Exception {
         CommandExecutionSpec commandexecutionspec = new CommandExecutionSpec(commonspec);
-        Assertions.assertThat(service).overridingErrorMessage("Error while parsing arguments. The service must be one of them: [community, pbd, zookeeper, ignite, kubernetes, etcd, arangodb, hdfs]").isIn("community", "zookeeper", "pbd", "ignite", "kubernetes", "etcd", "arangodb", "hdfs");
         commandexecutionspec.executeLocalCommand("echo '" + ThreadProperty.get("exhibitor_answer") + "' | jq '.phases[] | .[] | .steps[] | .[] | select(.role==\"" + role + "\") | select(.status==\"RUNNING\") | select(." + element + "==\"" + elementValue + "\").name' | sed 's/\"//g'", "0", envValue);
     }
 
 
     public void selectElements(String role, String service, String element) throws Exception {
         CommandExecutionSpec commandexecutionspec = new CommandExecutionSpec(commonspec);
-        Assertions.assertThat(service).overridingErrorMessage("Error while parsing arguments. The service must be one of them: [community, pbd, zookeeper, ignite, kubernetes, etcd, arangodb, hdfs]").isIn("community", "zookeeper", "pbd", "ignite", "kubernetes", "etcd", "arangodb", "hdfs");
         commandexecutionspec.executeLocalCommand("echo '" + ThreadProperty.get("exhibitor_answer") + "' | jq '.phases[] | .[] | .steps[] | .[] | select(.role==\"" + role + "\") | select(.status==\"RUNNING\")." + element + "' | sed 's/\"//g'", "0", "elementsConstraint");
     }
 
