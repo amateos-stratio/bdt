@@ -207,7 +207,7 @@ public class RestSpec extends BaseGSpec {
      *                      being the result of the modification: {"key1": "value1", "key2": {"key3": "new value3"}}
      * @throws Exception
      */
-    @When("^I send a '(.+?)' request to '(.+?)'( with user and password '(.+:.+?)')? based on '([^:]+?)'( as '(json|string|gov)')? with:$")
+    @When("^I send a '(.+?)' request to '(.+?)'( with user and password '(.+:.+?)')? based on '([^:]+?)'( as '(json|string|gov|scim)')? with:$")
     public void sendRequest(String requestType, String endPoint, String loginInfo, String baseData, String type, DataTable modifications) throws Exception {
         // Retrieve data
         String retrievedData = commonspec.retrieveData(baseData, type);
@@ -455,7 +455,7 @@ public class RestSpec extends BaseGSpec {
      * @param type
      * @throws Exception
      */
-    @When("^I send a '(.+?)' request to '(.+?)'( with user and password '(.+:.+?)')?( based on '([^:]+?)')?( as '(json|string|gov)')?$")
+    @When("^I send a '(.+?)' request to '(.+?)'( with user and password '(.+:.+?)')?( based on '([^:]+?)')?( as '(json|string|gov|scim)')?$")
     public void sendRequestNoDataTable(String requestType, String endPoint, String loginInfo, String baseData, String type) throws Exception {
         Future<Response> response;
         String user = null;
