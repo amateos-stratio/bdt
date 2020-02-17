@@ -728,7 +728,7 @@ public class CommonG {
         }
         String text = writer.toString();
 
-        if ("json".equals(type)) {
+        if ("json".equals(type) || "scim".equals(type)) {
             String std = text.replace("\r", "").replace("\n", ""); // make sure we have unix style text regardless of the input
             result = JsonValue.readHjson(std).asObject().toString();
         } else {
@@ -839,7 +839,7 @@ public class CommonG {
         Boolean jBoolean;
         boolean array = false;
 
-        if ("json".equals(type) || "gov".equals(type)) {
+        if ("json".equals(type) || "gov".equals(type) || "scim".equals(type)) {
             LinkedHashMap jsonAsMap = new LinkedHashMap();
             for (int i = 0; i < modifications.cells().size(); i++) {
                 String composeKey = modifications.cells().get(i).get(0);
