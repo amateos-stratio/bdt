@@ -114,6 +114,7 @@ public class CucumberRunner {
         uniqueGlue.add(new URI("classpath:com/stratio/qa/specs"));
         uniqueGlue.add(new URI("classpath:com/stratio/sparta/testsAT/specs"));
         uniqueGlue.add(new URI("classpath:com/stratio/gosecsso/testsAT/specs"));
+        uniqueGlue.add(new URI("classpath:com/stratio/gosecmanagement/testsAT/specs"));
         uniqueGlue.add(new URI("classpath:com/stratio/dcos/crossdata/testsAT/specs"));
         uniqueGlue.add(new URI("classpath:com/stratio/cct/configuration/api/specs"));
         uniqueGlue.add(new URI("classpath:com/stratio/crossdata/testsAT/specs"));
