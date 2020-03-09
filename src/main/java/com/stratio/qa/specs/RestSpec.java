@@ -31,6 +31,9 @@ import org.json.JSONObject;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Future;
 import java.util.regex.Pattern;
@@ -264,13 +267,30 @@ public class RestSpec extends BaseGSpec {
         Integer expectedStatusDelete = 200;
         String endPointResource = endPoint + resourceId;
         String endPointPolicy = "/service/gosecmanagement/api/policy";
-        String endPointPolicies = "/service/gosecmanagement/api/policies";
         String newEndPoint = "";
+        String gosecVersion = ThreadProperty.get("gosec-management_version");
+        List<List<String>> newModifications;
+        newModifications = convertDataTableToModifiableList(modifications);
+        Boolean addSourceType = false;
+        Boolean PoliciesEndPoint = false;
 
         if (endPoint.contains("id")) {
             newEndPoint = endPoint.replace("?id=", "");
         } else {
             newEndPoint = endPoint.substring(0, endPoint.length() - 1);
+        }
+
+        if (gosecVersion != null) {
+            String[] gosecVersionArray = gosecVersion.split("\\.");
+            //Add inputSourceType if Gosec >=1.4.x
+            if (Integer.parseInt(gosecVersionArray[0]) >= 1 && Integer.parseInt(gosecVersionArray[1]) >= 4) {
+                addSourceType = true;
+            }
+            //Use policies endpoint
+            if (Integer.parseInt(gosecVersionArray[0]) >= 1 && Integer.parseInt(gosecVersionArray[1]) >= 1) {
+                PoliciesEndPoint = true;
+                endPointPolicy = "/service/gosecmanagement/api/policies";
+            }
         }
 
         try {
@@ -283,33 +303,10 @@ public class RestSpec extends BaseGSpec {
                     String policyId = commonspec.getCommandResult().trim();
                     if (!policyId.equals("")) {
                         commonspec.getLogger().debug("PolicyId obtained: {}", policyId);
-                        endPointResource = newEndPoint + "/" + policyId;
-                    } else {
-                        commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.[] | select (.name == \"" + resourceId + "\").id' | sed s/\\\"//g");
-                        policyId = commonspec.getCommandResult().trim();
-                        if (!policyId.equals("")) {
-                            commonspec.getLogger().debug("PolicyId obtained: {}", policyId);
+                        if (PoliciesEndPoint) {
+                            endPointResource = newEndPoint + "?id=" + policyId;
+                        } else {
                             endPointResource = newEndPoint + "/" + policyId;
-                        }
-                    }
-                } else {
-                    if (commonspec.getResponse().getStatusCode() == 404) {
-                        commonspec.getLogger().warn("Error 404 accessing endpoint {}: checking the new endpoint for Gosec 1.1.1", endPointPolicy);
-                        sendRequestNoDataTable("GET", endPointPolicies, loginInfo, null, null);
-                        if (commonspec.getResponse().getStatusCode() == 200) {
-                            commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.list[] | select (.name == \"" + resourceId + "\").id' | sed s/\\\"//g");
-                            String policyId = commonspec.getCommandResult().trim();
-                            if (!policyId.equals("")) {
-                                commonspec.getLogger().debug("PolicyId obtained: {}", policyId);
-                                endPointResource = newEndPoint + "?id=" + policyId;
-                            } else {
-                                commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.[] | select (.name == \"" + resourceId + "\").id' | sed s/\\\"//g");
-                                policyId = commonspec.getCommandResult().trim();
-                                if (!policyId.equals("")) {
-                                    commonspec.getLogger().debug("PolicyId obtained: {}", policyId);
-                                    endPointResource = newEndPoint + "?id=" + policyId;
-                                }
-                            }
                         }
                     }
                 }
@@ -318,13 +315,21 @@ public class RestSpec extends BaseGSpec {
             sendRequestNoDataTable("GET", endPointResource, loginInfo, null, null);
 
             if (commonspec.getResponse().getStatusCode() != 200) {
-                sendRequest("POST", newEndPoint, loginInfo, baseData, type, modifications);
+                if (resource.equals("user") && (addSourceType)) {
+                    commonspec.getLogger().warn("Gosec Version:{} -> Adding inputsourceType = CUSTOM", gosecVersion);
+                    List<String> newField = Arrays.asList("$.inputSourceType", "ADD", "CUSTOM", "string");
+                    newModifications.add(newField);
+                }
+                //Create datatable with modified data
+                DataTable gosecModifications = DataTable.create(newModifications);
+                //Send POST request
+                sendRequest("POST", newEndPoint, loginInfo, baseData, type, gosecModifications);
                 try {
                     if (commonspec.getResponse().getStatusCode() == 409) {
                         commonspec.getLogger().warn("The resource {} already exists", resourceId);
                     } else {
                         assertThat(commonspec.getResponse().getStatusCode()).isEqualTo(expectedStatusCreate);
-                        commonspec.getLogger().debug("Resource {} created", resourceId);
+                        commonspec.getLogger().warn("Resource {} created", resourceId);
                     }
                 } catch (Exception e) {
                     commonspec.getLogger().warn("Error creating user {}: {}", resourceId, commonspec.getResponse().getResponse());
@@ -372,12 +377,22 @@ public class RestSpec extends BaseGSpec {
         Integer[] expectedStatusDelete = {200, 204};
         String endPointResource = endPoint + resourceId;
         String endPointPolicy = "/service/gosecmanagement/api/policy";
-        String endPointPolicies = "/service/gosecmanagement/api/policies";
+        String gosecVersion = ThreadProperty.get("gosec-management_version");
+        Boolean PoliciesEndPoint = false;
 
         if (endPoint.contains("id")) {
             endPoint = endPoint.replace("?id=", "");
         } else {
             endPoint = endPoint.substring(0, endPoint.length() - 1);
+        }
+
+        if (gosecVersion != null) {
+            String[] gosecVersionArray = gosecVersion.split("\\.");
+            // Use policies endpoint
+            if (Integer.parseInt(gosecVersionArray[0]) >= 1 && Integer.parseInt(gosecVersionArray[1]) >= 1) {
+                PoliciesEndPoint = true;
+                endPointPolicy = "/service/gosecmanagement/api/policies";
+            }
         }
 
         try {
@@ -390,32 +405,20 @@ public class RestSpec extends BaseGSpec {
                     String policyId = commonspec.getCommandResult().trim();
                     if (!policyId.equals("")) {
                         commonspec.getLogger().debug("PolicyId obtained: {}", policyId);
-                        endPointResource = endPoint + "/" + policyId;
+                        if (PoliciesEndPoint) {
+                            endPointResource = endPoint + "?id=" + policyId;
+                        } else {
+                            endPointResource = endPoint + "/" + policyId;
+                        }
                     } else {
                         commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.[] | select (.name == \"" + resourceId + "\").id' | sed s/\\\"//g");
                         policyId = commonspec.getCommandResult().trim();
                         if (!policyId.equals("")) {
                             commonspec.getLogger().debug("PolicyId obtained: {}", policyId);
-                            endPointResource = endPoint + "/" + policyId;
-                        }
-                    }
-                } else {
-                    if (commonspec.getResponse().getStatusCode() == 404) {
-                        commonspec.getLogger().warn("Error 404 accessing endpoint {}: checking the new endpoint for Gosec 1.1.1", endPointPolicy);
-                        sendRequestNoDataTable("GET", endPointPolicies, loginInfo, null, null);
-                        if (commonspec.getResponse().getStatusCode() == 200) {
-                            commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.list[] | select (.name == \"" + resourceId + "\").id' | sed s/\\\"//g");
-                            String policyId = commonspec.getCommandResult().trim();
-                            if (!policyId.equals("")) {
-                                commonspec.getLogger().debug("PolicyId obtained: {}", policyId);
+                            if (PoliciesEndPoint) {
                                 endPointResource = endPoint + "?id=" + policyId;
                             } else {
-                                commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.[] | select (.name == \"" + resourceId + "\").id' | sed s/\\\"//g");
-                                policyId = commonspec.getCommandResult().trim();
-                                if (!policyId.equals("")) {
-                                    commonspec.getLogger().debug("PolicyId obtained: {}", policyId);
-                                    endPointResource = endPoint + "?id=" + policyId;
-                                }
+                                endPointResource = endPoint + "/" + policyId;
                             }
                         }
                     }
@@ -656,15 +659,26 @@ public class RestSpec extends BaseGSpec {
     @When("^I get id from( tag)? policy with name '(.+?)' and save it in environment variable '(.+?)'$")
     public void getPolicyId(String tag, String policyName, String envVar) throws Exception {
         String endPoint = "/service/gosecmanagement/api/policy";
-        String newEndPoint = "/service/gosecmanagement/api/policies";
         String errorMessage = "api/policies";
         String errorMessage2 = "api/policy";
+        String gosecVersion = ThreadProperty.get("gosec-management_version");
+        Boolean PoliciesEndPoint = false;
 
         if (tag != null) {
             endPoint = "/service/gosecmanagement/api/policy/tag";
-            newEndPoint = "/service/gosecmanagement/api/policies/tags";
-            errorMessage = "api/policies/tags";
-            errorMessage2 = "api/policy/tag";
+        }
+
+        if (gosecVersion != null) {
+            String[] gosecVersionArray = gosecVersion.split("\\.");
+//       Use policies endpoint
+            if (Integer.parseInt(gosecVersionArray[0]) >= 1 && Integer.parseInt(gosecVersionArray[1]) >= 1) {
+                PoliciesEndPoint = true;
+                if (tag != null) {
+                    endPoint = "/service/gosecmanagement/api/policies/tags";
+                } else {
+                    endPoint = "/service/gosecmanagement/api/policies";
+                }
+            }
         }
         assertThat(commonspec.getRestHost().isEmpty() || commonspec.getRestPort().isEmpty());
         sendRequestNoDataTable("GET", endPoint, null, null, null);
@@ -680,23 +694,7 @@ public class RestSpec extends BaseGSpec {
             }
         } else {
             if (commonspec.getResponse().getStatusCode() == 404) {
-                commonspec.getLogger().warn("Error 404 accessing endpoint {}: checking the new endpoint for Gosec 1.1.1", endPoint);
-                sendRequestNoDataTable("GET", newEndPoint, null, null, null);
-                if (commonspec.getResponse().getStatusCode() == 200) {
-                    commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.list[] | select (.name == \"" + policyName + "\").id' | sed s/\\\"//g");
-                    commonspec.runCommandLoggerAndEnvVar(0, envVar, Boolean.TRUE);
-                    if (ThreadProperty.get(envVar) == null || ThreadProperty.get(envVar).trim().equals("")) {
-                        commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.[] | select (.name == \"" + policyName + "\").id' | sed s/\\\"//g");
-                        commonspec.runCommandLoggerAndEnvVar(0, envVar, Boolean.TRUE);
-                        if (ThreadProperty.get(envVar) == null || ThreadProperty.get(envVar).trim().equals("")) {
-                            fail("Error obtaining ID from policy " + policyName);
-                        }
-                    }
-                } else {
-                    fail("Error obtaining policies from gosecmanagement {} (Response code = " + commonspec.getResponse().getStatusCode() + ")", errorMessage);
-                }
-            } else {
-                fail("Error obtaining policies from gosecmanagement {} (Response code = " + commonspec.getResponse().getStatusCode() + ")", errorMessage2);
+                fail("Error obtaining policies from gosecmanagement {} (Response code = " + commonspec.getResponse().getStatusCode() + ")", endPoint);
             }
         }
     }
@@ -1041,6 +1039,20 @@ public class RestSpec extends BaseGSpec {
         } else {
             throw new Exception("Error obtaining Group: " + groupId + "- Status code: " + commonspec.getResponse().getStatusCode());
         }
+    }
+
+    private List<List<String>> convertDataTableToModifiableList(DataTable dataTable) {
+        List<List<String>> lists = dataTable.asLists(String.class);
+        List<List<String>> updateableLists = new ArrayList<>();
+        for (int i = 0; i < lists.size(); i++) {
+            List<String> list = lists.get(i);
+            List<String> updateableList = new ArrayList<>();
+            for (int j = 0; j < list.size(); j++) {
+                updateableList.add(j, list.get(j));
+            }
+            updateableLists.add(i, updateableList);
+        }
+        return updateableLists;
     }
 
 }

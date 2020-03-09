@@ -282,8 +282,10 @@ public class HookGSpec extends BaseGSpec {
     @Before(order = ORDER_20, value = "@dcos")
     public void dcosSetup() throws Exception {
         DcosSpec dcosSpec = new DcosSpec(commonspec);
+        MiscSpec miscspec = new MiscSpec(commonspec);
         dcosSpec.obtainBasicInfoFromDescriptor(null);
         dcosSpec.getServicesInfoFromMarathon();
+        miscspec.setGosecVariables();
     }
 
     @After(order = ORDER_20, value = "@dcos")
