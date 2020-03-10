@@ -4,7 +4,7 @@ Only listing significant user-visible, not internal code cleanups and minor bug 
 
 ## 0.15.0 (upcoming)
 
-* Pending changelog
+* [QATM-3183] Fix @dcos annotation if some container is null
 
 ## 0.14.0 (March 09, 2020)
 
