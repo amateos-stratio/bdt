@@ -236,18 +236,16 @@ public class RestSpec extends BaseGSpec {
     }
 
 
-    @When("^I create '(policy|user|group)' '(.+?)' using API service path '(.+?)'( with user and password '(.+:.+?)')? based on '([^:]+?)'( as '(json|string|gov)')? with:$")
+    @When("^I create '(policy|user|group)' '(.+?)'( using API service path '(.+?)')?( with user and password '(.+:.+?)')? based on '([^:]+?)'( as '(json|string|gov)')? with:$")
     public void createResource(String resource, String resourceId, String endPoint, String loginInfo, String baseData, String type, DataTable modifications) throws Exception {
         createResourceIfNotExist(resource, resourceId, endPoint, loginInfo, false, baseData, type, modifications);
 
     }
 
-
-    @When("^I create '(policy|user|group)' '(.+?)' using API service path '(.+?)'( with user and password '(.+:.+?)')? if it does not exist based on '([^:]+?)'( as '(json|string|gov)')? with:$")
+    @When("^I create '(policy|user|group)' '(.+?)'( using API service path '(.+?)')?( with user and password '(.+:.+?)')? if it does not exist based on '([^:]+?)'( as '(json|string|gov)')? with:$")
     public void createResourceIfNotExist(String resource, String resourceId, String endPoint, String loginInfo, String baseData, String type, DataTable modifications) throws Exception {
         createResourceIfNotExist(resource, resourceId, endPoint, loginInfo, true, baseData, type, modifications);
     }
-
 
     /**
      * Creates a custom resource in gosec management if the resource doesn't exist
@@ -265,19 +263,33 @@ public class RestSpec extends BaseGSpec {
     private void createResourceIfNotExist(String resource, String resourceId, String endPoint, String loginInfo, boolean doesNotExist, String baseData, String type, DataTable modifications) throws Exception {
         Integer expectedStatusCreate = 201;
         Integer expectedStatusDelete = 200;
-        String endPointResource = endPoint + resourceId;
-        String endPointPolicy = "/service/gosecmanagement/api/policy";
+        String endPointResource = "";
+        String endPointPolicies = "/service/gosecmanagement" + ThreadProperty.get("API_POLICIES");
+        String endPointPolicy = "/service/gosecmanagement" + ThreadProperty.get("API_POLICY");
         String newEndPoint = "";
         String gosecVersion = ThreadProperty.get("gosec-management_version");
         List<List<String>> newModifications;
         newModifications = convertDataTableToModifiableList(modifications);
         Boolean addSourceType = false;
-        Boolean PoliciesEndPoint = false;
 
-        if (endPoint.contains("id")) {
-            newEndPoint = endPoint.replace("?id=", "");
+        if (endPoint != null) {
+            endPointResource = endPoint + resourceId;
+
+            if (endPoint.contains("id")) {
+                newEndPoint = endPoint.replace("?id=", "");
+            } else {
+                newEndPoint = endPoint.substring(0, endPoint.length() - 1);
+            }
         } else {
-            newEndPoint = endPoint.substring(0, endPoint.length() - 1);
+            if (resource.equals("policy")) {
+                endPoint = "/service/gosecmanagement" + ThreadProperty.get("API_POLICY");
+            } else {
+                if (resource.equals("user")) {
+                    endPoint = "/service/gosecmanagement" + ThreadProperty.get("API_USER");
+                } else {
+                    endPoint = "/service/gosecmanagement" + ThreadProperty.get("API_GROUP");
+                }
+            }
         }
 
         if (gosecVersion != null) {
@@ -286,28 +298,19 @@ public class RestSpec extends BaseGSpec {
             if (Integer.parseInt(gosecVersionArray[0]) >= 1 && Integer.parseInt(gosecVersionArray[1]) >= 4) {
                 addSourceType = true;
             }
-            //Use policies endpoint
-            if (Integer.parseInt(gosecVersionArray[0]) >= 1 && Integer.parseInt(gosecVersionArray[1]) >= 1) {
-                PoliciesEndPoint = true;
-                endPointPolicy = "/service/gosecmanagement/api/policies";
-            }
         }
 
         try {
             assertThat(commonspec.getRestHost().isEmpty() || commonspec.getRestPort().isEmpty());
 
             if (resource.equals("policy")) {
-                sendRequestNoDataTable("GET", endPointPolicy, loginInfo, null, null);
+                sendRequestNoDataTable("GET", endPointPolicies, loginInfo, null, null);
                 if (commonspec.getResponse().getStatusCode() == 200) {
                     commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.list[] | select (.name == \"" + resourceId + "\").id' | sed s/\\\"//g");
                     String policyId = commonspec.getCommandResult().trim();
                     if (!policyId.equals("")) {
                         commonspec.getLogger().debug("PolicyId obtained: {}", policyId);
-                        if (PoliciesEndPoint) {
-                            endPointResource = newEndPoint + "?id=" + policyId;
-                        } else {
-                            endPointResource = newEndPoint + "/" + policyId;
-                        }
+                        endPointResource = endPointPolicy + policyId;
                     }
                 }
             }
