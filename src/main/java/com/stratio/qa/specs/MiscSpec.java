@@ -323,13 +323,13 @@ public class MiscSpec extends BaseGSpec {
 
     @Given("^I set gosec API variables$")
     public void setGosecVariables() throws Exception {
-        String gosecVersion = System.getProperty("STRATIO_GOSEC_MANAGEMENT_VERSION");
+        String gosecVersion = ThreadProperty.get("gosec-management_version");
         if (gosecVersion == null) {
-            throw new Exception("STRATIO_GOSEC_MANAGEMENT_VERSION has not been defined");
+            throw new Exception("gosec-management_version has not been defined");
         }
         String[] gosecVersionArray = gosecVersion.split("\\.");
         if (gosecVersionArray.length != 3) {
-            throw new Exception("STRATIO_GOSEC_MANAGEMENT_VERSION must have X.X.X format");
+            throw new Exception("gosec-management_version must have X.X.X format");
         }
         if (Integer.parseInt(gosecVersionArray[0]) >= 1 &&
                 (Integer.parseInt(gosecVersionArray[1]) > 1 || (Integer.parseInt(gosecVersionArray[1]) == 1 && Integer.parseInt(gosecVersionArray[2]) >= 1))) { //Gosec version >= 1.1.1
