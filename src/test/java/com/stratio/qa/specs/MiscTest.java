@@ -160,7 +160,7 @@ public class MiscTest {
 
         }
     }
-    
+
     @Test
     public void testValueEqualInJSON() throws Exception {
         String baseData = "consulMesosJSON.conf";
@@ -704,38 +704,38 @@ public class MiscTest {
     @Test
     public void testGosecVariablesNoGosecVersion() {
         ThreadProperty.set("class", this.getClass().getCanonicalName());
-        System.clearProperty("STRATIO_GOSEC_MANAGEMENT_VERSION");
         CommonG commong = new CommonG();
         MiscSpec misc = new MiscSpec(commong);
         assertThatExceptionOfType(Exception.class).isThrownBy(misc::setGosecVariables)
-                .withMessage("STRATIO_GOSEC_MANAGEMENT_VERSION has not been defined");
+                .withMessage("gosec-management_version has not been defined");
     }
 
     @Test
     public void testGosecVariablesInvalidGosecVersion() {
         ThreadProperty.set("class", this.getClass().getCanonicalName());
-        System.setProperty("STRATIO_GOSEC_MANAGEMENT_VERSION", "1.0");
+        ThreadProperty.set("gosec-management_version", "1.0");
+
         CommonG commong = new CommonG();
         MiscSpec misc = new MiscSpec(commong);
         assertThatExceptionOfType(Exception.class).isThrownBy(misc::setGosecVariables)
-                .withMessage("STRATIO_GOSEC_MANAGEMENT_VERSION must have X.X.X format");
-        System.clearProperty("STRATIO_GOSEC_MANAGEMENT_VERSION");
+                .withMessage("gosec-management_version must have X.X.X format");
+        ThreadProperty.remove("gosec-management_version");
     }
 
     @Test
     public void testGosecVariablesGosecVersionWithWrongCharacters() {
         ThreadProperty.set("class", this.getClass().getCanonicalName());
-        System.setProperty("STRATIO_GOSEC_MANAGEMENT_VERSION", "1.x.1");
+        ThreadProperty.set("gosec-management_version", "1.x.1");
         CommonG commong = new CommonG();
         MiscSpec misc = new MiscSpec(commong);
         assertThatExceptionOfType(Exception.class).isThrownBy(misc::setGosecVariables);
-        System.clearProperty("STRATIO_GOSEC_MANAGEMENT_VERSION");
+        ThreadProperty.remove("gosec-management_version");
     }
 
     @Test
     public void testGosecVariables() throws Exception {
         ThreadProperty.set("class", this.getClass().getCanonicalName());
-        System.setProperty("STRATIO_GOSEC_MANAGEMENT_VERSION", "1.1.0");
+        ThreadProperty.set("gosec-management_version", "1.1.0");
         CommonG commong = new CommonG();
         MiscSpec misc = new MiscSpec(commong);
         misc.setGosecVariables();
@@ -747,13 +747,13 @@ public class MiscTest {
         assertThat("/api/group").as("Check API_GROUPS").isEqualTo(ThreadProperty.get("API_GROUPS"));
         assertThat("/api/policy").as("Check API_POLICIES").isEqualTo(ThreadProperty.get("API_POLICIES"));
         assertThat("/api/policy/tag").as("Check API_TAGS").isEqualTo(ThreadProperty.get("API_TAGS"));
-        System.clearProperty("STRATIO_GOSEC_MANAGEMENT_VERSION");
+        ThreadProperty.remove("gosec-management_version");
     }
 
     @Test
     public void testGosecVariables2() throws Exception {
         ThreadProperty.set("class", this.getClass().getCanonicalName());
-        System.setProperty("STRATIO_GOSEC_MANAGEMENT_VERSION", "0.17.4");
+        ThreadProperty.set("gosec-management_version", "0.17.4");
         CommonG commong = new CommonG();
         MiscSpec misc = new MiscSpec(commong);
         misc.setGosecVariables();
@@ -765,13 +765,13 @@ public class MiscTest {
         assertThat("/api/group").as("Check API_GROUPS").isEqualTo(ThreadProperty.get("API_GROUPS"));
         assertThat("/api/policy").as("Check API_POLICIES").isEqualTo(ThreadProperty.get("API_POLICIES"));
         assertThat("/api/policy/tag").as("Check API_TAGS").isEqualTo(ThreadProperty.get("API_TAGS"));
-        System.clearProperty("STRATIO_GOSEC_MANAGEMENT_VERSION");
+        ThreadProperty.remove("gosec-management_version");
     }
 
     @Test
     public void testGosecVariables3() throws Exception {
         ThreadProperty.set("class", this.getClass().getCanonicalName());
-        System.setProperty("STRATIO_GOSEC_MANAGEMENT_VERSION", "1.1.1");
+        ThreadProperty.set("gosec-management_version", "1.1.1");
         CommonG commong = new CommonG();
         MiscSpec misc = new MiscSpec(commong);
         misc.setGosecVariables();
@@ -783,13 +783,13 @@ public class MiscTest {
         assertThat("/api/groups").as("Check API_GROUPS").isEqualTo(ThreadProperty.get("API_GROUPS"));
         assertThat("/api/policies").as("Check API_POLICIES").isEqualTo(ThreadProperty.get("API_POLICIES"));
         assertThat("/api/policies/tags").as("Check API_TAGS").isEqualTo(ThreadProperty.get("API_TAGS"));
-        System.clearProperty("STRATIO_GOSEC_MANAGEMENT_VERSION");
+        ThreadProperty.remove("gosec-management_version");
     }
 
     @Test
     public void testGosecVariables4() throws Exception {
         ThreadProperty.set("class", this.getClass().getCanonicalName());
-        System.setProperty("STRATIO_GOSEC_MANAGEMENT_VERSION", "1.2.0");
+        ThreadProperty.set("gosec-management_version", "1.2.0");
         CommonG commong = new CommonG();
         MiscSpec misc = new MiscSpec(commong);
         misc.setGosecVariables();
@@ -801,7 +801,7 @@ public class MiscTest {
         assertThat("/api/groups").as("Check API_GROUPS").isEqualTo(ThreadProperty.get("API_GROUPS"));
         assertThat("/api/policies").as("Check API_POLICIES").isEqualTo(ThreadProperty.get("API_POLICIES"));
         assertThat("/api/policies/tags").as("Check API_TAGS").isEqualTo(ThreadProperty.get("API_TAGS"));
-        System.clearProperty("STRATIO_GOSEC_MANAGEMENT_VERSION");
+        ThreadProperty.remove("gosec-management_version");
     }
 
 }
