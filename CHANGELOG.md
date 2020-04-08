@@ -4,6 +4,7 @@ Only listing significant user-visible, not internal code cleanups and minor bug 
 
 ## 0.15.0 (upcoming)
 
+* [GS-1954] Delete tenant if it exists
 * [PIT-474] Download log file from service
 * [PIT-464] Check content of stdout/stderr
 * [GS-1872] TestAT refactor for Gosec steps
