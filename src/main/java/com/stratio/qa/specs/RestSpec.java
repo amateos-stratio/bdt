@@ -715,6 +715,27 @@ public class RestSpec extends BaseGSpec {
         }
     }
 
+    @When("^I delete tenant '(.+?)' if it exists$")
+    public void deleteTenant(String tenantId) throws Exception {
+        String endPoint = "/service/gosec-identities-daas/identities/tenants";
+        String endPointResource = endPoint + "/" + tenantId;
+        Integer expectedStatus = 204;
+        assertThat(commonspec.getRestHost().isEmpty() || commonspec.getRestPort().isEmpty());
+        sendRequestNoDataTable("GET", endPointResource, null, null, null);
+        if (commonspec.getResponse().getStatusCode() == 200) {
+            sendRequestNoDataTable("DELETE", endPointResource, null, null, null);
+            commonspec.getLogger().warn("Tenant {} deleted", tenantId);
+            try {
+                assertThat(commonspec.getResponse().getStatusCode()).isEqualTo(expectedStatus);
+            } catch (Exception e) {
+                commonspec.getLogger().warn("Error deleting Tenant {}: {}", tenantId, commonspec.getResponse().getResponse());
+                throw e;
+            }
+        } else {
+            commonspec.getLogger().warn("Tenant {} does not exist - not deleted", tenantId);
+        }
+    }
+
     @When("^I include '(user|group)' '(.+?)' in tenant '(.+?)'$")
     public void includeResourceInTenant(String resource, String resourceId, String tenantId) throws Exception {
         String endPointGetAllUsers = "/service/gosec-identities-daas/identities/users";
