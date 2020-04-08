@@ -346,7 +346,12 @@ public class RestSpec extends BaseGSpec {
                     if (commonspec.getResponse().getStatusCode() == 409) {
                         commonspec.getLogger().warn("The resource {} already exists", resourceId);
                     } else {
-                        assertThat(commonspec.getResponse().getStatusCode()).isEqualTo(expectedStatusCreate);
+                        try {
+                            assertThat(commonspec.getResponse().getStatusCode()).isEqualTo(expectedStatusCreate);
+                        } catch (Exception e) {
+                            commonspec.getLogger().warn("Error creating Resource {}: {}", resourceId, commonspec.getResponse().getResponse());
+                            throw e;
+                        }
                         commonspec.getLogger().warn("Resource {} created", resourceId);
                     }
                 } catch (Exception e) {
@@ -601,12 +606,22 @@ public class RestSpec extends BaseGSpec {
     @Then("^the service response must contain the text '(.*?)'$")
     public void assertResponseMessage(String expectedText) throws SecurityException, IllegalArgumentException {
         Pattern pattern = CommonG.matchesOrContains(expectedText);
-        assertThat(commonspec.getResponse().getResponse()).containsPattern(pattern);
+        try {
+            assertThat(commonspec.getResponse().getResponse()).containsPattern(pattern);
+        } catch (AssertionError e) {
+            commonspec.getLogger().warn("Response: {}", commonspec.getResponse().getResponse());
+            throw e;
+        }
     }
 
     @Then("^the service response must not contain the text '(.*?)'$")
     public void assertNegativeResponseMessage(String expectedText) throws ClassNotFoundException, NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
-        assertThat(commonspec.getResponse().getResponse()).doesNotContain(expectedText);
+        try {
+            assertThat(commonspec.getResponse().getResponse()).doesNotContain(expectedText);
+        } catch (AssertionError e) {
+            commonspec.getLogger().warn("Response: {}", commonspec.getResponse().getResponse());
+            throw e;
+        }
     }
 
     @Then("^the service response status must be '(\\d+)'( and its response length must be '(\\d+)')?( and its response must contain the text '(.*?)')?$")
@@ -614,17 +629,27 @@ public class RestSpec extends BaseGSpec {
         Integer expectedLength = sExpectedLength != null ? Integer.parseInt(sExpectedLength) : null;
         if (expectedLength != null || expectedText != null) {
             if (expectedLength != null) {
-                assertThat(Optional.of(commonspec.getResponse())).hasValueSatisfying(r -> {
-                    assertThat(r.getStatusCode()).isEqualTo(expectedStatus);
-                    assertThat((new JSONArray(r.getResponse())).length()).isEqualTo(expectedLength);
-                });
+                try {
+                    assertThat(Optional.of(commonspec.getResponse())).hasValueSatisfying(r -> {
+                        assertThat(r.getStatusCode()).isEqualTo(expectedStatus);
+                        assertThat((new JSONArray(r.getResponse())).length()).isEqualTo(expectedLength);
+                    });
+                } catch (AssertionError e) {
+                    commonspec.getLogger().warn("Response: {}", commonspec.getResponse().getResponse());
+                    throw e;
+                }
             }
             if (expectedText != null) {
                 Pattern pattern = CommonG.matchesOrContains(expectedText);
-                assertThat(Optional.of(commonspec.getResponse())).hasValueSatisfying(r -> {
-                    assertThat(r.getStatusCode()).isEqualTo(expectedStatus);
-                    assertThat(r.getResponse()).containsPattern(pattern);
-                });
+                try {
+                    assertThat(Optional.of(commonspec.getResponse())).hasValueSatisfying(r -> {
+                        assertThat(r.getStatusCode()).isEqualTo(expectedStatus);
+                        assertThat(r.getResponse()).containsPattern(pattern);
+                    });
+                } catch (AssertionError e) {
+                    commonspec.getLogger().warn("Response: {}", commonspec.getResponse().getResponse());
+                    throw e;
+                }
             }
         } else {
             try {

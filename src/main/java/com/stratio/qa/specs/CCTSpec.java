@@ -23,6 +23,8 @@ import cucumber.api.java.en.Given;
 import io.cucumber.datatable.DataTable;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -43,6 +45,7 @@ import static org.testng.Assert.fail;
  */
 public class CCTSpec extends BaseGSpec {
 
+    private final Logger logger = LoggerFactory.getLogger(CCTSpec.class);
     /**
      * Generic constructor.
      *
@@ -266,7 +269,8 @@ public class CCTSpec extends BaseGSpec {
         response = commonspec.generateRequest("DELETE", false, null, null, endPoint, "", null, "");
         commonspec.setResponse("DELETE", response.get());
         if (commonspec.getResponse().getStatusCode() != 200 || commonspec.getResponse().getStatusCode() != 201) {
-            throw new Exception("Request failed to endpoint: " + endPoint + " with status code: " + commonspec.getResponse().getStatusCode());
+            logger.error("Request failed to endpoint: " + endPoint + " with status code: " + commonspec.getResponse().getStatusCode() + " and response: " + commonspec.getResponse().getResponse());
+            throw new Exception("Request failed to endpoint: " + endPoint + " with status code: " + commonspec.getResponse().getStatusCode() + " and response: " + commonspec.getResponse().getResponse());
         }
         // Check service has disappeared
         RestSpec restSpec = new RestSpec(commonspec);
@@ -306,7 +310,8 @@ public class CCTSpec extends BaseGSpec {
         commonspec.setResponse("PUT", response.get());
 
         if (commonspec.getResponse().getStatusCode() != 200 || commonspec.getResponse().getStatusCode() != 201) {
-            throw new Exception("Request failed to endpoint: " + endPoint + " with status code: " + commonspec.getResponse().getStatusCode());
+            logger.error("Request failed to endpoint: " + endPoint + " with status code: " + commonspec.getResponse().getStatusCode() + " and response: " + commonspec.getResponse().getResponse());
+            throw new Exception("Request failed to endpoint: " + endPoint + " with status code: " + commonspec.getResponse().getStatusCode() + " and response: " + commonspec.getResponse().getResponse());
         }
     }
 
@@ -377,7 +382,7 @@ public class CCTSpec extends BaseGSpec {
             boolean res = (arrayOfTasks.getJSONObject(0).getString(key).equalsIgnoreCase(expectedStatus));
             if (!res) {
                 commonspec.getLogger().warn("The status of " + arrayOfTasks.getJSONObject(0).getString("name") + " is " + arrayOfTasks.getJSONObject(0).getString(key));
-                commonspec.getLogger().warn("Status of " + arrayOfTasks.getJSONObject(0).getString("name") + " expected " + expectedStatus);
+                commonspec.getLogger().warn("Expected status of " + arrayOfTasks.getJSONObject(0).getString("name") + " is " + expectedStatus);
             }
             return res;
         }
@@ -387,8 +392,8 @@ public class CCTSpec extends BaseGSpec {
             if (task.getString("name").matches(regex_name)) {
                 task_counter++;
                 if (!task.getString(key).equalsIgnoreCase(expectedStatus)) {
-                    commonspec.getLogger().warn("The status of " + task.getString("name") + "is " + task.getString(key));
-                    commonspec.getLogger().warn("Status of " + task.getString("name") + "expected " + expectedStatus);
+                    commonspec.getLogger().warn("The status of " + task.getString("name") + " is " + task.getString(key));
+                    commonspec.getLogger().warn(" Expected status of " + task.getString("name") + " is " + expectedStatus);
                     return false;
                 }
             }
@@ -396,7 +401,7 @@ public class CCTSpec extends BaseGSpec {
         if (task_counter == tasks) {
             return true;
         }
-        commonspec.getLogger().error("The number of task deployed are not be the expected tasks");
+        commonspec.getLogger().error("The number of tasks deployed: " + task_counter + " are not the expected ones: " + tasks);
         return false;
     }
 
@@ -436,9 +441,9 @@ public class CCTSpec extends BaseGSpec {
                 break;
             } else {
                 if (!found) {
-                    commonspec.getLogger().info(expectedStatus + " status not found or tasks  after " + i + " seconds for service " + service);
+                    commonspec.getLogger().info(expectedStatus + " status or tasks not found after " + i + " seconds for service " + service);
                 } else if (numTasks != null && !isDeployed) {
-                    commonspec.getLogger().info("Tasks have not been deployed successfully after" + i + " seconds for service " + service);
+                    commonspec.getLogger().info("Tasks have not been deployed successfully after " + i + " seconds for service " + service);
                 }
                 if (i < timeout) {
                     Thread.sleep(wait * 1000);
@@ -532,7 +537,8 @@ public class CCTSpec extends BaseGSpec {
         commonspec.setResponse("GET", response.get());
 
         if (commonspec.getResponse().getStatusCode() != 200) {
-            throw new Exception("Request failed to endpoint: " + endPoint + " with status code: " + commonspec.getResponse().getStatusCode());
+            logger.error("Request failed to endpoint: " + endPoint + " with status code: " + commonspec.getResponse().getStatusCode() + " and response: " + commonspec.getResponse().getResponse());
+            throw new Exception("Request failed to endpoint: " + endPoint + " with status code: " + commonspec.getResponse().getStatusCode() + " and response: " + commonspec.getResponse().getResponse());
         }
 
         String json = commonspec.getResponse().getResponse();
@@ -563,7 +569,8 @@ public class CCTSpec extends BaseGSpec {
         commonspec.setResponse("GET", response.get());
 
         if (commonspec.getResponse().getStatusCode() != 200) {
-            throw new Exception("Request failed to endpoint: " + endPoint + " with status code: " + commonspec.getResponse().getStatusCode());
+            logger.error("Request failed to endpoint: " + endPoint + " with status code: " + commonspec.getResponse().getStatusCode() + " and response: " + commonspec.getResponse().getResponse());
+            throw new Exception("Request failed to endpoint: " + endPoint + " with status code: " + commonspec.getResponse().getStatusCode() + " and response: " + commonspec.getResponse().getResponse());
         }
 
         String json = commonspec.getResponse().getResponse();
@@ -594,7 +601,8 @@ public class CCTSpec extends BaseGSpec {
         commonspec.setResponse("GET", response.get());
 
         if (commonspec.getResponse().getStatusCode() != 200) {
-            throw new Exception("Request failed to endpoint: " + endPoint + " with status code: " + commonspec.getResponse().getStatusCode());
+            logger.error("Request failed to endpoint: " + endPoint + " with status code: " + commonspec.getResponse().getStatusCode() + " and response: " + commonspec.getResponse().getResponse());
+            throw new Exception("Request failed to endpoint: " + endPoint + " with status code: " + commonspec.getResponse().getStatusCode() + " and response: " + commonspec.getResponse().getResponse());
         }
 
         String json = commonspec.getResponse().getResponse();
@@ -626,7 +634,8 @@ public class CCTSpec extends BaseGSpec {
         commonspec.setResponse("GET", response.get());
 
         if (commonspec.getResponse().getStatusCode() != 200) {
-            throw new Exception("Request failed to endpoint: " + endPoint + " with status code: " + commonspec.getResponse().getStatusCode());
+            logger.error("Request failed to endpoint: " + endPoint + " with status code: " + commonspec.getResponse().getStatusCode() + " and response: " + commonspec.getResponse().getResponse());
+            throw new Exception("Request failed to endpoint: " + endPoint + " with status code: " + commonspec.getResponse().getStatusCode() + " and response: " + commonspec.getResponse().getResponse());
         }
 
         String json = commonspec.getResponse().getResponse();
@@ -657,7 +666,8 @@ public class CCTSpec extends BaseGSpec {
         commonspec.setResponse("GET", response.get());
 
         if (commonspec.getResponse().getStatusCode() != 200) {
-            throw new Exception("Request failed to endpoint: " + endPoint + " with status code: " + commonspec.getResponse().getStatusCode());
+            logger.error("Request failed to endpoint: " + endPoint + " with status code: " + commonspec.getResponse().getStatusCode() + " and response: " + commonspec.getResponse().getResponse());
+            throw new Exception("Request failed to endpoint: " + endPoint + " with status code: " + commonspec.getResponse().getStatusCode() + " and response: " + commonspec.getResponse().getResponse());
         }
 
         String json = commonspec.getResponse().getResponse();
@@ -692,7 +702,8 @@ public class CCTSpec extends BaseGSpec {
         commonspec.setResponse("GET", response.get());
 
         if (commonspec.getResponse().getStatusCode() != 200) {
-            throw new Exception("Request failed to endpoint: " + endPoint + " with status code: " + commonspec.getResponse().getStatusCode());
+            logger.error("Request failed to endpoint: " + endPoint + " with status code: " + commonspec.getResponse().getStatusCode() + " and response: " + commonspec.getResponse().getResponse());
+            throw new Exception("Request failed to endpoint: " + endPoint + " with status code: " + commonspec.getResponse().getStatusCode() + " and response: " + commonspec.getResponse().getResponse());
         }
 
         String json = commonspec.getResponse().getResponse();
@@ -909,7 +920,8 @@ public class CCTSpec extends BaseGSpec {
         commonspec.setResponse("GET", response.get());
 
         if (commonspec.getResponse().getStatusCode() != 200) {
-            throw new Exception("Request to endpoint: " + endPoint + " failed with status code: " + commonspec.getResponse().getStatusCode());
+            logger.error("Request failed to endpoint: " + endPoint + " with status code: " + commonspec.getResponse().getStatusCode() + " and response: " + commonspec.getResponse().getResponse());
+            throw new Exception("Request to endpoint: " + endPoint + " failed with status code: " + commonspec.getResponse().getStatusCode() + " and response: " + commonspec.getResponse().getResponse());
         }
 
         String json = commonspec.getResponse().getResponse();
@@ -959,7 +971,8 @@ public class CCTSpec extends BaseGSpec {
         commonspec.setResponse("POST", response.get());
 
         if (commonspec.getResponse().getStatusCode() != 202) {
-            throw new Exception("Request to endpoint: " + endPoint + " failed with status code: " + commonspec.getResponse().getStatusCode());
+            logger.error("Request to endpoint: " + endPoint + " failed with status code: " + commonspec.getResponse().getStatusCode() + " and response: " + commonspec.getResponse().getResponse());
+            throw new Exception("Request to endpoint: " + endPoint + " failed with status code: " + commonspec.getResponse().getStatusCode() + " and response: " + commonspec.getResponse().getResponse());
         }
 
         // Check Application in API
@@ -1002,7 +1015,8 @@ public class CCTSpec extends BaseGSpec {
         commonspec.setResponse("DELETE", response.get());
 
         if (commonspec.getResponse().getStatusCode() != 202 && commonspec.getResponse().getStatusCode() != 200) {
-            throw new Exception("Request to endpoint: " + endPoint + " failed with status code: " + commonspec.getResponse().getStatusCode());
+            logger.error("Request to endpoint: " + endPoint + " failed with status code: " + commonspec.getResponse().getStatusCode() + " and response: " + commonspec.getResponse().getResponse());
+            throw new Exception("Request to endpoint: " + endPoint + " failed with status code: " + commonspec.getResponse().getStatusCode() + " and response: " + commonspec.getResponse().getResponse());
         }
 
         // Check service has disappeared
