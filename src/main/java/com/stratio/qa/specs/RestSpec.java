@@ -1097,4 +1097,87 @@ public class RestSpec extends BaseGSpec {
         return updateableLists;
     }
 
+
+    /**
+     * Updates a resource in gosec management if the resourceId exists previously.
+     *
+     * @param resource      : type of resource (policy, user, group or tenant)
+     * @param resourceId    : policy name, userId, groupId or tenantId
+     * @param loginInfo     (optional)
+     * @param type          : type of data (json,string,gov)
+     * @param modifications : data to modify the resource
+     * @throws Exception if the resource does not exists or the request fails
+     */
+    @When("^I update '(policy|user|group|tenant)' '(.+?)'( with user and password '(.+:.+?)')? based on '([^:]+?)'( as '(json|string|gov)')? with:$")
+    public void updateResource(String resource, String resourceId, String loginInfo, String baseData, String type, DataTable modifications) throws Exception {
+        Integer[] expectedStatusUpdate = {200, 201, 204};
+        String endPointPolicy = "/service/gosecmanagement" + ThreadProperty.get("API_POLICY");
+        String endPointPolicies = "/service/gosecmanagement" + ThreadProperty.get("API_POLICIES");
+        String endPoint = "";
+        String endPointResource = "";
+
+        if (resource.equals("policy")) {
+            endPoint = "/service/gosecmanagement" + ThreadProperty.get("API_POLICY");
+        } else {
+            if (resource.equals("user")) {
+                endPoint = "/service/gosecmanagement" + ThreadProperty.get("API_USER");
+            } else {
+                endPoint = "/service/gosecmanagement" + ThreadProperty.get("API_GROUP");
+            }
+            if (resource.equals("tenant")) {
+                endPoint = "/service/gosec-identities-daas/identities/tenants/";
+            }
+        }
+
+        try {
+            assertThat(commonspec.getRestHost().isEmpty() || commonspec.getRestPort().isEmpty());
+
+            if (resource.equals("policy")) {
+                sendRequestNoDataTable("GET", endPointPolicies, loginInfo, null, null);
+                if (commonspec.getResponse().getStatusCode() == 200) {
+                    commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.list[] | select (.name == \"" + resourceId + "\").id' | sed s/\\\"//g");
+                    String policyId = commonspec.getCommandResult().trim();
+                    if (!policyId.equals("")) {
+                        commonspec.getLogger().debug("PolicyId obtained: {}", policyId);
+                        endPointResource = endPointPolicy + policyId;
+                    } else {
+                        commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.[] | select (.name == \"" + resourceId + "\").id' | sed s/\\\"//g");
+                        policyId = commonspec.getCommandResult().trim();
+                        if (!policyId.equals("")) {
+                            commonspec.getLogger().debug("PolicyId obtained: {}", policyId);
+                            endPointResource = endPointPolicy + policyId;
+                        } else {
+                            endPointResource = endPointPolicy + "thisPolicyDoesNotExistId";
+                        }
+                    }
+                }
+            } else {
+                endPointResource = endPoint + resourceId;
+            }
+
+            sendRequestNoDataTable("GET", endPointResource, loginInfo, null, null);
+
+            if (commonspec.getResponse().getStatusCode() == 200) {
+                if (resource.equals("tenant")) {
+                    sendRequest("PATCH", endPointResource, loginInfo, baseData, type, modifications);
+                } else {
+                    sendRequest("PUT", endPointResource, loginInfo, baseData, type, modifications);
+                }
+                commonspec.getLogger().warn("Resource {}:{} updated", resource, resourceId);
+
+                try {
+                    assertThat(commonspec.getResponse().getStatusCode()).isIn(expectedStatusUpdate);
+                } catch (Exception e) {
+                    commonspec.getLogger().error("Error updating Resource {} {}: {}", resource, resourceId, commonspec.getResponse().getResponse());
+                    throw e;
+                }
+            } else {
+                commonspec.getLogger().error("Resource {}:{} not found so it's not updated", resource, resourceId);
+            }
+        } catch (Exception e) {
+            commonspec.getLogger().error("Rest Host or Rest Port are not initialized {}: {}", commonspec.getRestHost(), commonspec.getRestPort());
+            throw e;
+        }
+    }
+
 }
