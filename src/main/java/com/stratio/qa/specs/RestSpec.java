@@ -1180,4 +1180,67 @@ public class RestSpec extends BaseGSpec {
         }
     }
 
+
+    @When("^I remove '(user|group)' '(.+?)' in tenant '(.+?)'$")
+    public void removeResourceInTenant(String resource, String resourceId, String tenantId) throws Exception {
+        String endPointGetAllUsers = "/service/gosec-identities-daas/identities/users";
+        String endPointGetAllGroups = "/service/gosec-identities-daas/identities/groups";
+        String endPointTenant = "/service/gosec-identities-daas/identities/tenants/" + tenantId;
+        assertThat(commonspec.getRestHost().isEmpty() || commonspec.getRestPort().isEmpty());
+        String uidOrGid = "uid";
+        String uidOrGidTenant = "uids";
+        String endPointGosec = endPointGetAllUsers;
+        if (resource.equals("group")) {
+            uidOrGid = "gid";
+            uidOrGidTenant = "gids";
+            endPointGosec = endPointGetAllGroups;
+        }
+        sendRequestNoDataTable("GET", endPointGosec, null, null, null);
+        if (commonspec.getResponse().getStatusCode() == 200) {
+            if (commonspec.getResponse().getResponse().contains("\"" + uidOrGid + "\":\"" + resourceId + "\"")) {
+                sendRequestNoDataTable("GET", endPointTenant, null, null, null);
+                if (commonspec.getResponse().getStatusCode() == 200) {
+                    JsonObject jsonTenantInfo = new JsonObject(JsonValue.readHjson(commonspec.getResponse().getResponse()).asObject());
+                    if (((JsonArray) jsonTenantInfo.get(uidOrGidTenant)).values().contains(JsonValue.valueOf(resourceId))) {
+                        //remove resource from tenant
+                        //Get groups/users from profile
+                        JsonArray jsonGroups = (JsonArray) jsonTenantInfo.get(uidOrGidTenant);
+                        //Create new string for new data without resource
+                        String[] stringGroups = new String[jsonGroups.size() - 1];
+                        //Create json for put
+                        JSONObject putObject = new JSONObject(commonspec.getResponse().getResponse());
+                        //Remove ids in json
+                        putObject.remove(uidOrGidTenant);
+                        //create new array with values without resourceId
+                        for (int i = 0; i < jsonGroups.size(); i++) {
+                            int j = 0;
+                            String jsonIds = jsonGroups.get(i).toString().substring(1, jsonGroups.get(i).toString().length() - 1);
+                            if (jsonIds.equals(resourceId)) {
+                                commonspec.getLogger().warn("{} {} removed from tenant {}", resource, resourceId, tenantId);
+                            } else {
+                                stringGroups[j] = jsonIds;
+                                j = j + 1;
+                            }
+                        }
+                        putObject.put(uidOrGidTenant, stringGroups);
+                        commonspec.getLogger().debug("Json for PATCH request---> {}", putObject.toString());
+                        Future<Response> response = commonspec.generateRequest("PATCH", false, null, null, endPointTenant, JsonValue.readHjson(putObject.toString()).toString(), "json", "");
+                        commonspec.setResponse("PATCH", response.get());
+                        if (commonspec.getResponse().getStatusCode() != 204) {
+                            throw new Exception("Error removing " + resource + " " + resourceId + " in tenant " + tenantId + " - Status code: " + commonspec.getResponse().getStatusCode());
+                        }
+
+                    } else {
+                        commonspec.getLogger().error("{} is not included in tenant -> not removed", resourceId);
+                    }
+                } else {
+                    throw new Exception("Error obtaining info from tenant " + tenantId + " - Status code: " + commonspec.getResponse().getStatusCode());
+                }
+            } else {
+                throw new Exception(resource + " " + resourceId + " doesn't exist in Gosec");
+            }
+        } else {
+            throw new Exception("Error obtaining " + resource + "s - Status code: " + commonspec.getResponse().getStatusCode());
+        }
+    }
 }
