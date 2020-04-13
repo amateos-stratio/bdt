@@ -329,28 +329,28 @@ public class MiscSpec extends BaseGSpec {
         } else {
             String[] gosecVersionArray = gosecVersion.split("\\.");
             if (gosecVersionArray.length != 3) {
-                throw new Exception("gosec-management_version must have X.X.X format");
-            }
-            if (Integer.parseInt(gosecVersionArray[0]) >= 1 &&
-                    (Integer.parseInt(gosecVersionArray[1]) > 1 || (Integer.parseInt(gosecVersionArray[1]) == 1 && Integer.parseInt(gosecVersionArray[2]) >= 1))) { //Gosec version >= 1.1.1
-                ThreadProperty.set("API_USER", "/api/user?id=");
-                ThreadProperty.set("API_GROUP", "/api/group?id=");
-                ThreadProperty.set("API_POLICY", "/api/policy?id=");
-                ThreadProperty.set("API_TAG", "/api/policy/tag?id=");
-                ThreadProperty.set("API_USERS", "/api/users");
-                ThreadProperty.set("API_GROUPS", "/api/groups");
-                ThreadProperty.set("API_POLICIES", "/api/policies");
-                ThreadProperty.set("API_TAGS", "/api/policies/tags");
+                commonspec.getLogger().warn("gosec-management_version must have X.X.X format");
             } else {
-                ThreadProperty.set("API_USER", "/api/user/");
-                ThreadProperty.set("API_GROUP", "/api/group/");
-                ThreadProperty.set("API_POLICY", "/api/policy/");
-                ThreadProperty.set("API_TAG", "/api/policy/tag/");
-                ThreadProperty.set("API_USERS", "/api/user");
-                ThreadProperty.set("API_GROUPS", "/api/group");
-                ThreadProperty.set("API_POLICIES", "/api/policy");
-                ThreadProperty.set("API_TAGS", "/api/policy/tag");
-            }
+                if (Integer.parseInt(gosecVersionArray[0]) >= 1 && (Integer.parseInt(gosecVersionArray[1]) > 1 || (Integer.parseInt(gosecVersionArray[1]) == 1 && Integer.parseInt(gosecVersionArray[2]) >= 1))) { //Gosec version >= 1.1.1
+                    ThreadProperty.set("API_USER", "/api/user?id=");
+                    ThreadProperty.set("API_GROUP", "/api/group?id=");
+                    ThreadProperty.set("API_POLICY", "/api/policy?id=");
+                    ThreadProperty.set("API_TAG", "/api/policy/tag?id=");
+                    ThreadProperty.set("API_USERS", "/api/users");
+                    ThreadProperty.set("API_GROUPS", "/api/groups");
+                    ThreadProperty.set("API_POLICIES", "/api/policies");
+                    ThreadProperty.set("API_TAGS", "/api/policies/tags");
+                } else {
+                    ThreadProperty.set("API_USER", "/api/user/");
+                    ThreadProperty.set("API_GROUP", "/api/group/");
+                    ThreadProperty.set("API_POLICY", "/api/policy/");
+                    ThreadProperty.set("API_TAG", "/api/policy/tag/");
+                    ThreadProperty.set("API_USERS", "/api/user");
+                    ThreadProperty.set("API_GROUPS", "/api/group");
+                    ThreadProperty.set("API_POLICIES", "/api/policy");
+                    ThreadProperty.set("API_TAGS", "/api/policy/tag");
+                }
+            }                
         }
     }
 }
