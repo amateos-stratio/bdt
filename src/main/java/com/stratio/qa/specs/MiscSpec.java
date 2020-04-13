@@ -325,11 +325,11 @@ public class MiscSpec extends BaseGSpec {
     public void setGosecVariables() throws Exception {
         String gosecVersion = ThreadProperty.get("gosec-management_version");
         if (gosecVersion == null) {
-            throw new Exception("gosec-management_version has not been defined");
+            commonspec.getLogger().warn("gosec-management_version has not been defined");
         }
         String[] gosecVersionArray = gosecVersion.split("\\.");
         if (gosecVersionArray.length != 3) {
-            throw new Exception("gosec-management_version must have X.X.X format");
+            commonspec.getLogger().warn("gosec-management_version must have X.X.X format");
         }
         if (Integer.parseInt(gosecVersionArray[0]) >= 1 &&
                 (Integer.parseInt(gosecVersionArray[1]) > 1 || (Integer.parseInt(gosecVersionArray[1]) == 1 && Integer.parseInt(gosecVersionArray[2]) >= 1))) { //Gosec version >= 1.1.1
