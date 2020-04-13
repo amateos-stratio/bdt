@@ -348,7 +348,7 @@ public class RestSpec extends BaseGSpec {
                     } else {
                         try {
                             assertThat(commonspec.getResponse().getStatusCode()).isEqualTo(expectedStatusCreate);
-                        } catch (Exception e) {
+                        } catch (AssertionError e) {
                             commonspec.getLogger().warn("Error creating Resource {}: {}", resourceId, commonspec.getResponse().getResponse());
                             throw e;
                         }
@@ -372,7 +372,7 @@ public class RestSpec extends BaseGSpec {
 
                         try {
                             assertThat(commonspec.getResponse().getStatusCode()).isEqualTo(expectedStatusDelete);
-                        } catch (Exception e) {
+                        } catch (AssertionError e) {
                             commonspec.getLogger().warn("Error deleting Policy {}: {}", resourceId, commonspec.getResponse().getResponse());
                             throw e;
                         }
@@ -451,7 +451,7 @@ public class RestSpec extends BaseGSpec {
 
                 try {
                     assertThat(commonspec.getResponse().getStatusCode()).isIn(expectedStatusDelete);
-                } catch (Exception e) {
+                } catch (AssertionError e) {
                     commonspec.getLogger().warn("Error deleting Resource {}: {}", resourceId, commonspec.getResponse().getResponse());
                     throw e;
                 }
@@ -733,7 +733,7 @@ public class RestSpec extends BaseGSpec {
             sendRequest("POST", endPoint, null, baseData, type, modifications);
             try {
                 assertThat(commonspec.getResponse().getStatusCode()).isEqualTo(expectedStatus);
-            } catch (Exception e) {
+            } catch (AssertionError e) {
                 commonspec.getLogger().warn("Error creating Tenant {}: {}", tenantId, commonspec.getResponse().getResponse());
                 throw e;
             }
@@ -752,7 +752,7 @@ public class RestSpec extends BaseGSpec {
             commonspec.getLogger().warn("Tenant {} deleted", tenantId);
             try {
                 assertThat(commonspec.getResponse().getStatusCode()).isEqualTo(expectedStatus);
-            } catch (Exception e) {
+            } catch (AssertionError e) {
                 commonspec.getLogger().warn("Error deleting Tenant {}: {}", tenantId, commonspec.getResponse().getResponse());
                 throw e;
             }
@@ -1167,7 +1167,7 @@ public class RestSpec extends BaseGSpec {
 
                 try {
                     assertThat(commonspec.getResponse().getStatusCode()).isIn(expectedStatusUpdate);
-                } catch (Exception e) {
+                } catch (AssertionError e) {
                     commonspec.getLogger().error("Error updating Resource {} {}: {}", resource, resourceId, commonspec.getResponse().getResponse());
                     throw e;
                 }
