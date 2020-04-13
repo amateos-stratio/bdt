@@ -350,7 +350,7 @@ public class MiscSpec extends BaseGSpec {
                     ThreadProperty.set("API_POLICIES", "/api/policy");
                     ThreadProperty.set("API_TAGS", "/api/policy/tag");
                 }
-            }                
+            }
         }
     }
 }
