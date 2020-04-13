@@ -1180,8 +1180,13 @@ public class RestSpec extends BaseGSpec {
         }
     }
 
-
-    @When("^I remove '(user|group)' '(.+?)' in tenant '(.+?)'$")
+    /**
+     * Removes user or group from tenant if the resource exists and has been assigned previously
+     * @param resource      : type of resource (user or group)
+     * @param resourceId    : userId or groupId
+     * @throws Exception if the resource does not exists or the request fails
+     */
+    @When("^I remove '(user|group)' '(.+?)' from tenant '(.+?)'$")
     public void removeResourceInTenant(String resource, String resourceId, String tenantId) throws Exception {
         String endPointGetAllUsers = "/service/gosec-identities-daas/identities/users";
         String endPointGetAllGroups = "/service/gosec-identities-daas/identities/groups";
@@ -1203,7 +1208,7 @@ public class RestSpec extends BaseGSpec {
                     JsonObject jsonTenantInfo = new JsonObject(JsonValue.readHjson(commonspec.getResponse().getResponse()).asObject());
                     if (((JsonArray) jsonTenantInfo.get(uidOrGidTenant)).values().contains(JsonValue.valueOf(resourceId))) {
                         //remove resource from tenant
-                        //Get groups/users from profile
+                        //Get groups/users from tenant
                         JsonArray jsonGroups = (JsonArray) jsonTenantInfo.get(uidOrGidTenant);
                         //Create new string for new data without resource
                         String[] stringGroups = new String[jsonGroups.size() - 1];
