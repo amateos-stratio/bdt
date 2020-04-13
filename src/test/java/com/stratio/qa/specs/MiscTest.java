@@ -701,26 +701,26 @@ public class MiscTest {
         System.clearProperty("SPARTA_TENANT");
     }
 
-    @Test
-    public void testGosecVariablesNoGosecVersion() {
-        ThreadProperty.set("class", this.getClass().getCanonicalName());
-        CommonG commong = new CommonG();
-        MiscSpec misc = new MiscSpec(commong);
-        assertThatExceptionOfType(Exception.class).isThrownBy(misc::setGosecVariables)
-                .withMessage("gosec-management_version has not been defined");
-    }
-
-    @Test
-    public void testGosecVariablesInvalidGosecVersion() {
-        ThreadProperty.set("class", this.getClass().getCanonicalName());
-        ThreadProperty.set("gosec-management_version", "1.0");
-
-        CommonG commong = new CommonG();
-        MiscSpec misc = new MiscSpec(commong);
-        assertThatExceptionOfType(Exception.class).isThrownBy(misc::setGosecVariables)
-                .withMessage("gosec-management_version must have X.X.X format");
-        ThreadProperty.remove("gosec-management_version");
-    }
+//    @Test
+//    public void testGosecVariablesNoGosecVersion() {
+//        ThreadProperty.set("class", this.getClass().getCanonicalName());
+//        CommonG commong = new CommonG();
+//        MiscSpec misc = new MiscSpec(commong);
+//        assertThatExceptionOfType(Exception.class).isThrownBy(misc::setGosecVariables)
+//                .withMessage("gosec-management_version has not been defined");
+//    }
+//
+//    @Test
+//    public void testGosecVariablesInvalidGosecVersion() {
+//        ThreadProperty.set("class", this.getClass().getCanonicalName());
+//        ThreadProperty.set("gosec-management_version", "1.0");
+//
+//        CommonG commong = new CommonG();
+//        MiscSpec misc = new MiscSpec(commong);
+//        assertThatExceptionOfType(Exception.class).isThrownBy(misc::setGosecVariables)
+//                .withMessage("gosec-management_version must have X.X.X format");
+//        ThreadProperty.remove("gosec-management_version");
+//    }
 
     @Test
     public void testGosecVariablesGosecVersionWithWrongCharacters() {
