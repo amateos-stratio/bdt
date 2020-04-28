@@ -43,6 +43,7 @@ public class GosecSpec extends BaseGSpec {
     private final Logger logger = LoggerFactory.getLogger(GosecSpec.class);
 
     RestSpec restSpec;
+
     /**
      * Generic constructor.
      *
@@ -390,9 +391,12 @@ public class GosecSpec extends BaseGSpec {
         }
     }
 
-    @When("^I get id from profile with name '(.+?)' and save it in environment variable '(.+?)'$")
-    public void getProfiled(String profileName, String envVar) throws Exception {
+    @When("^I get id from profile with name '(.+?)'( in tenant '(.+?)')? and save it in environment variable '(.+?)'$")
+    public void getProfiled(String profileName, String tenant, String envVar) throws Exception {
         String endPoint = "/service/gosec-identities-daas/identities/profiles";
+        if (tenant != null) {
+            endPoint = "/service/gosec-identities-daas/identities/profiles?tid=" + tenant;
+        }
 
         assertThat(commonspec.getRestHost().isEmpty() || commonspec.getRestPort().isEmpty());
         restSpec.sendRequestNoDataTable("GET", endPoint, null, null, null);
@@ -661,8 +665,9 @@ public class GosecSpec extends BaseGSpec {
 
     /**
      * Removes user or group from tenant if the resource exists and has been assigned previously
-     * @param resource      : type of resource (user or group)
-     * @param resourceId    : userId or groupId
+     *
+     * @param resource   : type of resource (user or group)
+     * @param resourceId : userId or groupId
      * @throws Exception if the resource does not exists or the request fails
      */
     @When("^I remove '(user|group)' '(.+?)' from tenant '(.+?)'$")
