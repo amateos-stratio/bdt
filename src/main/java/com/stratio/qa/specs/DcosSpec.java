@@ -1333,7 +1333,7 @@ public class DcosSpec extends BaseGSpec {
             throw new Exception("Error in marathon request. Response code: " + commonspec.getResponse().getStatusCode());
         }
         // Save versions
-        List<String> appsToSaveVersion = Arrays.asList("gosec-management", "dyplon-http", "gosec-identities-daas", "gosec-services-daas", "command-center", "cct-deploy-api", "cct-universe", "cct-marathon-services", "cct-configuration-api");
+        List<String> appsToSaveVersion = Arrays.asList("gosec-management", "dyplon-http", "gosec-identities-daas", "gosec-services-daas", "command-center", "cct-deploy-api", "cct-universe", "cct-marathon-services", "cct-configuration-api", "gosec-management-baas", "gosec-management-ui");
         JSONObject marathonAnswer = new JSONObject(commonspec.getResponse().getResponse());
         JSONArray marathonApps = (JSONArray) marathonAnswer.get("apps");
         for (Object oApp : marathonApps) {
