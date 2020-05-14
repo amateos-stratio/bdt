@@ -915,8 +915,8 @@ public class GosecSpec extends BaseGSpec {
         Boolean managementBaas = false;
         String endPointResource = "";
         String uid = userName.replaceAll("\\s+", ""); //delete white spaces
-        Integer expectedStatusCreate = 201;
         String newEndPoint = "";
+        String data = "";
 
         if (tenantOrig != null) {
             // Set REST connection
@@ -956,69 +956,15 @@ public class GosecSpec extends BaseGSpec {
                 JSONObject postJson = new JSONObject();
 
                 if (!managementBaas) {
-                    postJson.put("id", uid);
-                    postJson.put("name", userName);
-                    postJson.put("email", uid + "@stratio.com");
-                    if (groups != null) {
-                        String[] gids = groups.split(",");
-                        postJson.put("groups", gids);
-                    } else {
-                        postJson.put("groups", new JSONArray());
-                    }
-                    if (addSourceType) {
-                        postJson.put("inputSourceType", "CUSTOM");
-                    } else {
-                        postJson.put("custom", "true");
-                    }
-                    if (keytab != null) {
-                        postJson.put("keytab", true);
-                    }
-                    if (certificate != null) {
-                        postJson.put("certificate", true);
-                    }
-
+                    //json for gosec-management endpoint
+                    data = generateManagementUserJson(uid, userName, groups, keytab, certificate, addSourceType);
                 } else {
-                    //json para baas
-                    postJson.put("uid", uid);
-                    postJson.put("name", userName);
-                    postJson.put("email", uid + "@stratio.com");
-                    postJson.put("inputSourceType", "Custom");
-                    if (groups != null) {
-                        String[] gids = groups.split(",");
-                        postJson.put("groups", gids);
-                    } else {
-                        postJson.put("groups", new JSONArray());
-                    }
-                    if (keytab != null) {
-                        postJson.put("keytab", true);
-                    }
-                    if (certificate != null) {
-                        postJson.put("certificate", true);
-                    }
+                    //json for gosec-management-baas endpoint
+                    data = generateBaasUserJson(uid, userName, groups, keytab, certificate);
                 }
 
-                String data = postJson.toString();
                 // Send POST request
-                commonspec.getLogger().warn("Json for POST request---> {}", data);
-                Future<Response> response = commonspec.generateRequest("POST", true, null, null, newEndPoint, data, "json");
-                commonspec.setResponse("POST", response.get());
-
-                try {
-                    if (commonspec.getResponse().getStatusCode() == 409) {
-                        commonspec.getLogger().warn("The custom user {} already exists", userName);
-                    } else {
-                        try {
-                            assertThat(commonspec.getResponse().getStatusCode()).isEqualTo(expectedStatusCreate);
-                        } catch (AssertionError e) {
-                            commonspec.getLogger().warn("Error creating custom user {}: {}", userName, commonspec.getResponse().getResponse());
-                            throw e;
-                        }
-                        commonspec.getLogger().warn("Custom User {} created", userName);
-                    }
-                } catch (Exception e) {
-                    commonspec.getLogger().warn("Error creating custom user {}: {}", userName, commonspec.getResponse().getResponse());
-                    throw e;
-                }
+                sendIdentitiesPostRequest("user", userName, data, newEndPoint);
 
 
             } else {
@@ -1054,6 +1000,7 @@ public class GosecSpec extends BaseGSpec {
         String gid = groupName.replaceAll("\\s+", ""); //delete white spaces
         Integer expectedStatusCreate = 201;
         String newEndPoint = "";
+        String data = "";
 
         if (tenantOrig != null) {
             // Set REST connection
@@ -1090,85 +1037,17 @@ public class GosecSpec extends BaseGSpec {
             restSpec.sendRequestNoDataTable("GET", endPointResource, null, null, null);
 
             if (commonspec.getResponse().getStatusCode() != 200) {
-                JSONObject postJson = new JSONObject();
-
                 if (!managementBaas) {
-                    postJson.put("id", gid);
-                    postJson.put("name", groupName);
-                    if (users != null) {
-                        String[] uids = users.split(",");
-                        postJson.put("users", uids);
-                    } else {
-                        postJson.put("users", new JSONArray());
-                    }
-                    if (groups != null) {
-                        String[] gids = groups.split(",");
-                        postJson.put("groups", gids);
-                    } else {
-                        postJson.put("groups", new JSONArray());
-                    }
-                    if (addSourceType) {
-                        postJson.put("inputSourceType", "CUSTOM");
-                    } else {
-                        postJson.put("custom", "true");
-                    }
+                    //json for gosec-management endpoint
+                    data = generateManagementGroupJson(gid, groupName, users, groups, addSourceType);
 
                 } else {
-                    //json para baas
-                    postJson.put("gid", gid);
-                    postJson.put("name", groupName);
-                    postJson.put("inputSourceType", "Custom");
-                    if (users != null) {
-                        String[] uids = users.split(",");
-                        JSONArray jArray = new JSONArray();
-
-                        for (int i = 0; i < uids.length; i++) {
-                            JSONObject uidsObject = new JSONObject();
-                            uidsObject.put("uid", uids[i]);
-                            jArray.put(uidsObject);
-                        }
-                        postJson.put("users", jArray);
-                    } else {
-                        postJson.put("users", new JSONArray());
-                    }
-                    if (groups != null) {
-                        String[] gids = groups.split(",");
-                        JSONArray jArray = new JSONArray();
-
-                        for (int i = 0; i < gids.length; i++) {
-                            JSONObject gidsObject = new JSONObject();
-                            gidsObject.put("uid", gids[i]);
-                            jArray.put(gidsObject);
-                        }
-                        postJson.put("groups", jArray);
-                    } else {
-                        postJson.put("groups", new JSONArray());
-                    }
+                    //json for gosec-management-baas endpoint
+                    data = generateBaasGroupJson(gid, groupName, users, groups);
                 }
 
-                String data = postJson.toString();
                 // Send POST request
-                commonspec.getLogger().warn("Json for POST request---> {}", data);
-                Future<Response> response = commonspec.generateRequest("POST", true, null, null, newEndPoint, data, "json");
-                commonspec.setResponse("POST", response.get());
-
-                try {
-                    if (commonspec.getResponse().getStatusCode() == 409) {
-                        commonspec.getLogger().warn("The custom group {} already exists", groupName);
-                    } else {
-                        try {
-                            assertThat(commonspec.getResponse().getStatusCode()).isEqualTo(expectedStatusCreate);
-                        } catch (AssertionError e) {
-                            commonspec.getLogger().warn("Error creating custom group {}: {}", groupName, commonspec.getResponse().getResponse());
-                            throw e;
-                        }
-                        commonspec.getLogger().warn("Custom Group {} created", groupName);
-                    }
-                } catch (Exception e) {
-                    commonspec.getLogger().warn("Error creating custom group {}: {}", groupName, commonspec.getResponse().getResponse());
-                    throw e;
-                }
-
+                sendIdentitiesPostRequest("group", groupName, data, newEndPoint);
 
             } else {
                 commonspec.getLogger().warn("Custom group:{} already exist", groupName);
@@ -1179,6 +1058,142 @@ public class GosecSpec extends BaseGSpec {
             throw e;
         }
 
+    }
+
+    private String generateManagementGroupJson(String gid, String groupName, String users, String groups, Boolean addSourceType) {
+        JSONObject postJson = new JSONObject();
+        String data = "";
+        postJson.put("id", gid);
+        postJson.put("name", groupName);
+        if (users != null) {
+            String[] uids = users.split(",");
+            postJson.put("users", uids);
+        } else {
+            postJson.put("users", new JSONArray());
+        }
+        if (groups != null) {
+            String[] gids = groups.split(",");
+            postJson.put("groups", gids);
+        } else {
+            postJson.put("groups", new JSONArray());
+        }
+        if (addSourceType) {
+            postJson.put("inputSourceType", "CUSTOM");
+        } else {
+            postJson.put("custom", "true");
+        }
+        data = postJson.toString();
+        return data;
+    }
+
+    private String generateBaasGroupJson(String gid, String groupName, String users, String groups) {
+        JSONObject postJson = new JSONObject();
+        String data = "";
+        postJson.put("gid", gid);
+        postJson.put("name", groupName);
+        postJson.put("inputSourceType", "Custom");
+        if (users != null) {
+            String[] uids = users.split(",");
+            JSONArray jArray = new JSONArray();
+
+            for (int i = 0; i < uids.length; i++) {
+                JSONObject uidsObject = new JSONObject();
+                uidsObject.put("uid", uids[i]);
+                jArray.put(uidsObject);
+            }
+            postJson.put("users", jArray);
+        } else {
+            postJson.put("users", new JSONArray());
+        }
+        if (groups != null) {
+            String[] gids = groups.split(",");
+            JSONArray jArray = new JSONArray();
+
+            for (int i = 0; i < gids.length; i++) {
+                JSONObject gidsObject = new JSONObject();
+                gidsObject.put("uid", gids[i]);
+                jArray.put(gidsObject);
+            }
+            postJson.put("groups", jArray);
+        } else {
+            postJson.put("groups", new JSONArray());
+        }
+        data = postJson.toString();
+        return data;
+    }
+
+    private String generateManagementUserJson(String uid, String userName, String groups, String keytab, String certificate, Boolean addSourceType) {
+        JSONObject postJson = new JSONObject();
+        String data = "";
+        postJson.put("id", uid);
+        postJson.put("name", userName);
+        postJson.put("email", uid + "@stratio.com");
+        if (groups != null) {
+            String[] gids = groups.split(",");
+            postJson.put("groups", gids);
+        } else {
+            postJson.put("groups", new JSONArray());
+        }
+        if (addSourceType) {
+            postJson.put("inputSourceType", "CUSTOM");
+        } else {
+            postJson.put("custom", "true");
+        }
+        if (keytab != null) {
+            postJson.put("keytab", true);
+        }
+        if (certificate != null) {
+            postJson.put("certificate", true);
+        }
+        data = postJson.toString();
+        return data;
+    }
+
+    private String generateBaasUserJson(String uid, String userName, String groups, String keytab, String certificate) {
+        JSONObject postJson = new JSONObject();
+        String data = "";
+        postJson.put("uid", uid);
+        postJson.put("name", userName);
+        postJson.put("email", uid + "@stratio.com");
+        postJson.put("inputSourceType", "Custom");
+        if (groups != null) {
+            String[] gids = groups.split(",");
+            postJson.put("groups", gids);
+        } else {
+            postJson.put("groups", new JSONArray());
+        }
+        if (keytab != null) {
+            postJson.put("keytab", true);
+        }
+        if (certificate != null) {
+            postJson.put("certificate", true);
+        }
+        data = postJson.toString();
+        return data;
+    }
+
+    private void sendIdentitiesPostRequest(String resource, String resourceName, String data, String newEndPoint) throws Exception {
+        Integer expectedStatusCreate = 201;
+        commonspec.getLogger().warn("Json for POST request---> {}", data);
+        Future<Response> response = commonspec.generateRequest("POST", true, null, null, newEndPoint, data, "json");
+        commonspec.setResponse("POST", response.get());
+
+        try {
+            if (commonspec.getResponse().getStatusCode() == 409) {
+                commonspec.getLogger().warn("The custom {} {} already exists", resource, resourceName);
+            } else {
+                try {
+                    assertThat(commonspec.getResponse().getStatusCode()).isEqualTo(expectedStatusCreate);
+                } catch (AssertionError e) {
+                    commonspec.getLogger().warn("Error creating custom {} {}: {}", resource, resourceName, commonspec.getResponse().getResponse());
+                    throw e;
+                }
+                commonspec.getLogger().warn("Custom {} {} created", resource, resourceName);
+            }
+        } catch (Exception e) {
+            commonspec.getLogger().warn("Error creating custom {} {}: {}", resource, resourceName, commonspec.getResponse().getResponse());
+            throw e;
+        }
     }
 
 }
