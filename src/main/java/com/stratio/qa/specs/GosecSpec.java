@@ -371,9 +371,17 @@ public class GosecSpec extends BaseGSpec {
     @When("^I get id from( tag)? policy with name '(.+?)'( in tenant '(.+?)')?( with tenant user and tenant password '(.+:.+?)')?( with user and password '(.+:.+?)')? and save it in environment variable '(.+?)'$")
     public void getPolicyId(String tag, String policyName, String tenantOrig, String tenantLoginInfo, String loginInfo, String envVar) throws Exception {
         String endPoint = "/service/gosecmanagement" + ThreadProperty.get("API_POLICIES");
+        String managementBaasVersion = ThreadProperty.get("gosec-management-baas_version");
+
+        if (managementBaasVersion != null) {
+            endPoint = "/service/gosec-management-baas/management/policies";
+        }
 
         if (tag != null) {
             endPoint = "/service/gosecmanagement" + ThreadProperty.get("API_TAGS");
+            if (managementBaasVersion != null) {
+                endPoint = "/service/gosec-management-baas/management/policies/tags";
+            }
         }
 
         if (tenantOrig != null) {
@@ -384,13 +392,21 @@ public class GosecSpec extends BaseGSpec {
         assertThat(commonspec.getRestHost().isEmpty() || commonspec.getRestPort().isEmpty());
         restSpec.sendRequestNoDataTable("GET", endPoint, null, null, null);
         if (commonspec.getResponse().getStatusCode() == 200) {
-            commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.list[] | select (.name == \"" + policyName + "\").id' | sed s/\\\"//g");
-            commonspec.runCommandLoggerAndEnvVar(0, envVar, Boolean.TRUE);
-            if (ThreadProperty.get(envVar) == null || ThreadProperty.get(envVar).trim().equals("")) {
-                commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.[] | select (.name == \"" + policyName + "\").id' | sed s/\\\"//g");
+            if (managementBaasVersion != null) {
+                commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.list[] | select (.name == \"" + policyName + "\").pid' | sed s/\\\"//g");
                 commonspec.runCommandLoggerAndEnvVar(0, envVar, Boolean.TRUE);
                 if (ThreadProperty.get(envVar) == null || ThreadProperty.get(envVar).trim().equals("")) {
                     fail("Error obtaining ID from policy " + policyName);
+                }
+            } else {
+                commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.list[] | select (.name == \"" + policyName + "\").id' | sed s/\\\"//g");
+                commonspec.runCommandLoggerAndEnvVar(0, envVar, Boolean.TRUE);
+                if (ThreadProperty.get(envVar) == null || ThreadProperty.get(envVar).trim().equals("")) {
+                    commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.[] | select (.name == \"" + policyName + "\").id' | sed s/\\\"//g");
+                    commonspec.runCommandLoggerAndEnvVar(0, envVar, Boolean.TRUE);
+                    if (ThreadProperty.get(envVar) == null || ThreadProperty.get(envVar).trim().equals("")) {
+                        fail("Error obtaining ID from policy " + policyName);
+                    }
                 }
             }
         } else {
