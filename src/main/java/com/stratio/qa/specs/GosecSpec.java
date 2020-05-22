@@ -275,7 +275,7 @@ public class GosecSpec extends BaseGSpec {
 
         if (managementBaasVersion != null) {
             endPointPolicies = "/service/gosec-management-baas/management/policies";
-            endPointPolicy = "/service/gosec-management-baas/management/policies/";
+            endPointPolicy = "/service/gosec-management-baas/management/policy?pid=";
         }
 
         if (endPoint != null) {
@@ -284,18 +284,18 @@ public class GosecSpec extends BaseGSpec {
             if (resource.equals("policy")) {
                 endPoint = "/service/gosecmanagement" + ThreadProperty.get("API_POLICY");
                 if (managementBaasVersion != null) {
-                    endPoint = "/service/gosec-management-baas/management/policies/";
+                    endPoint = "/service/gosec-management-baas/management/policy?pid=";
                 }
             } else {
                 if (resource.equals("user")) {
                     endPoint = "/service/gosecmanagement" + ThreadProperty.get("API_USER");
                     if (managementBaasVersion != null) {
-                        endPoint = "/service/gosec-management-baas/management/users/";
+                        endPoint = "/service/gosec-management-baas/management/user?uid=";
                     }
                 } else {
                     endPoint = "/service/gosecmanagement" + ThreadProperty.get("API_GROUP");
                     if (managementBaasVersion != null) {
-                        endPoint = "/service/gosec-management-baas/management/groups/";
+                        endPoint = "/service/gosec-management-baas/management/group?gid=";
                     }
                 }
             }
@@ -973,13 +973,16 @@ public class GosecSpec extends BaseGSpec {
             newEndPoint = endPoint.substring(0, endPoint.length() - 1);
         }
 
+        if (managementBaasVersion != null) {
+            endPoint = "/service/gosec-management-baas/management/user?uid=";
+            newEndPoint = "/service/gosec-management-baas/management/user";
+        }
+
         try {
             assertThat(commonspec.getRestHost().isEmpty() || commonspec.getRestPort().isEmpty());
 
             if (managementBaasVersion != null) {  //vamos por management-baas
                 managementBaas = true;
-                endPoint = "/service/gosec-management-baas/management/users/";
-                newEndPoint = endPoint.substring(0, endPoint.length() - 1);
             } else {
                 if (managementVersion != null) {  //vamos por management
                     String[] gosecVersionArray = managementVersion.split("\\.");
@@ -997,7 +1000,6 @@ public class GosecSpec extends BaseGSpec {
             restSpec.sendRequestNoDataTable("GET", endPointResource, null, null, null);
 
             if (commonspec.getResponse().getStatusCode() != 200) {
-                JSONObject postJson = new JSONObject();
 
                 if (!managementBaas) {
                     //json for gosec-management endpoint
@@ -1057,13 +1059,16 @@ public class GosecSpec extends BaseGSpec {
             newEndPoint = endPoint.substring(0, endPoint.length() - 1);
         }
 
+        if (managementBaasVersion != null) {
+            endPoint = "/service/gosec-management-baas/management/group?gid=";
+            newEndPoint = "/service/gosec-management-baas/management/group";
+        }
+
         try {
             assertThat(commonspec.getRestHost().isEmpty() || commonspec.getRestPort().isEmpty());
 
             if (managementBaasVersion != null) {  //vamos por management-baas
                 managementBaas = true;
-                endPoint = "/service/gosec-management-baas/management/groups/";
-                newEndPoint = endPoint.substring(0, endPoint.length() - 1);
             } else {
                 if (managementVersion != null) {  //vamos por management
                     String[] gosecVersionArray = managementVersion.split("\\.");
@@ -1155,7 +1160,7 @@ public class GosecSpec extends BaseGSpec {
 
             for (int i = 0; i < gids.length; i++) {
                 JSONObject gidsObject = new JSONObject();
-                gidsObject.put("uid", gids[i]);
+                gidsObject.put("gid", gids[i]);
                 jArray.put(gidsObject);
             }
             postJson.put("groups", jArray);
@@ -1202,7 +1207,14 @@ public class GosecSpec extends BaseGSpec {
         postJson.put("inputSourceType", "Custom");
         if (groups != null) {
             String[] gids = groups.split(",");
-            postJson.put("groups", gids);
+            JSONArray jArray = new JSONArray();
+
+            for (int i = 0; i < gids.length; i++) {
+                JSONObject gidsObject = new JSONObject();
+                gidsObject.put("gid", gids[i]);
+                jArray.put(gidsObject);
+            }
+            postJson.put("groups", jArray);
         } else {
             postJson.put("groups", new JSONArray());
         }
@@ -1239,5 +1251,4 @@ public class GosecSpec extends BaseGSpec {
             throw e;
         }
     }
-
 }
