@@ -32,7 +32,7 @@ public class DeployApiClient extends BaseClient {
     private static DeployApiClient CLIENT;
 
     public static DeployApiClient getInstance(CommonG common) {
-        if (CLIENT == null) {
+        if (CLIENT == null || CLIENT.httpClient == null || CLIENT.httpClient.isClosed()) {
             CLIENT = new DeployApiClient(common);
         }
         return CLIENT;

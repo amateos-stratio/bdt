@@ -18,10 +18,13 @@ package com.stratio.qa.specs;
 
 import com.stratio.qa.clients.marathon.MarathonApiClient;
 import com.stratio.qa.clients.mesos.MesosApiClient;
+import com.stratio.qa.models.mesos.MesosConstants;
 import com.stratio.qa.models.mesos.MesosTask;
 import com.stratio.qa.utils.ThreadProperty;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -63,6 +66,37 @@ public class MesosSpec extends BaseGSpec {
         String message = notExist == null ? "not " : "";
         assertThat(false)
                         .as("Mesos task for id " + taskId + " " + message + "found in mesos after " + timeout + " seconds").isTrue();
+    }
+
+    @Then("^task with id '(.+?)' appears with state '(running|killed|failed|finished|staging|starting)' in mesos$")
+    public void checkTaskIdState(String taskId, String state) throws Exception {
+
+        List<MesosTask> tasks = mesosApiClient.getMesosTask(taskId).getTasks();
+        assertThat(tasks.size() > 0)
+                .as("Mesos task for id " + taskId + " found in mesos")
+                .isTrue();
+        assertThat(tasks.get(0).getState().equals(MesosConstants.statesDict.get(state)))
+                .as("Mesos task for id " + taskId + " found in mesos with state " + state)
+                .isTrue();
+    }
+
+    @Then("^in less than '(\\d+)' seconds, checking each '(\\d+)' seconds, task with id '(.+?)' appears with state '(running|killed|failed|finished|staging|starting)' in mesos$")
+    public void checkTaskIdStateWithPolling(int timeout, int pause, String taskId, String state) throws Exception {
+        int time = 0;
+        List<MesosTask> tasks;
+        while (time < timeout) {
+
+            tasks = mesosApiClient.getMesosTask(taskId).getTasks();
+            if (tasks.size() != 0 && tasks.get(0).getState().equals(MesosConstants.statesDict.get(state))) {
+                return;
+            }
+
+            Thread.sleep(pause * 1000);
+            time += pause;
+        }
+
+        assertThat(false)
+                .as("Mesos task for id " + taskId + " found in mesos with state " + state + " after " + timeout + " seconds").isTrue();
     }
 
     @When("^I get container name for task '(.+?)' in service with id '(.+?)' from Marathon and save the value in environment variable '(.+?)'$")

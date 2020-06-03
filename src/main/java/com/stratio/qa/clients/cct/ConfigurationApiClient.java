@@ -29,7 +29,7 @@ public class ConfigurationApiClient extends BaseClient {
     private static ConfigurationApiClient CLIENT;
 
     public static ConfigurationApiClient getInstance(CommonG common) {
-        if (CLIENT == null) {
+        if (CLIENT == null || CLIENT.httpClient == null || CLIENT.httpClient.isClosed()) {
             CLIENT = new ConfigurationApiClient(common);
         }
         return CLIENT;

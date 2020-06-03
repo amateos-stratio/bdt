@@ -32,7 +32,7 @@ public class CctMarathonServiceApiClient extends BaseClient {
     private static CctMarathonServiceApiClient CLIENT;
 
     public static CctMarathonServiceApiClient getInstance(CommonG common) {
-        if (CLIENT == null) {
+        if (CLIENT == null || CLIENT.httpClient == null || CLIENT.httpClient.isClosed()) {
             CLIENT = new CctMarathonServiceApiClient(common);
         }
         return CLIENT;

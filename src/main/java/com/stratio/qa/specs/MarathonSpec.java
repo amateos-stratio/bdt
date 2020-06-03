@@ -100,11 +100,13 @@ public class MarathonSpec extends BaseGSpec {
         int time = 0;
         while (time < timeout) {
             app = marathonApiClient.getApp(appId);
-            tasks = app.getApp().getTasks();
+            if (app.getApp() != null) {
+                tasks = app.getApp().getTasks();
 
-            count = (int) tasks.stream().filter(task -> task.getState().equals(translatedState)).count();
-            if (count == numberOfTasks) {
-                return;
+                count = (int) tasks.stream().filter(task -> task.getState().equals(translatedState)).count();
+                if (count == numberOfTasks) {
+                    return;
+                }
             }
 
             Thread.sleep(pause * 1000);
@@ -127,11 +129,13 @@ public class MarathonSpec extends BaseGSpec {
         int time = 0;
         while (time < timeout) {
             app = marathonApiClient.getApp(appId);
-            tasks = app.getApp().getTasks();
+            if (app.getApp() != null) {
+                tasks = app.getApp().getTasks();
 
-            count = (int) tasks.stream().filter(task -> task.getState().equals(translatedState)).count();
-            if (count == tasks.size()) {
-                return;
+                count = (int) tasks.stream().filter(task -> task.getState().equals(translatedState)).count();
+                if (count == tasks.size()) {
+                    return;
+                }
             }
 
             Thread.sleep(pause * 1000);
@@ -152,25 +156,27 @@ public class MarathonSpec extends BaseGSpec {
         while (time < timeout) {
             app = marathonApiClient.getApp(appId);
 
-            switch (state) {
-                case "healthy":
-                    count = app.getApp().getTasksHealthy();
-                    break;
-                case "unhealthy":
-                    count = app.getApp().getTasksUnhealthy();
-                    break;
-                case "staged":
-                    count = app.getApp().getTasksStaged();
-                    break;
-                case "running":
-                    count = app.getApp().getTasksRunning();
-                    break;
-                default:
-                    count = 0;
-            }
+            if (app.getApp() != null) {
+                switch (state) {
+                    case "healthy":
+                        count = app.getApp().getTasksHealthy();
+                        break;
+                    case "unhealthy":
+                        count = app.getApp().getTasksUnhealthy();
+                        break;
+                    case "staged":
+                        count = app.getApp().getTasksStaged();
+                        break;
+                    case "running":
+                        count = app.getApp().getTasksRunning();
+                        break;
+                    default:
+                        count = 0;
+                }
 
-            if (count == numberOfTasks) {
-                return;
+                if (count == numberOfTasks) {
+                    return;
+                }
             }
 
             Thread.sleep(pause * 1000);
@@ -190,27 +196,29 @@ public class MarathonSpec extends BaseGSpec {
         int time = 0;
         while (time < timeout) {
             app = marathonApiClient.getApp(appId);
+            if (app.getApp() != null) {
+                switch (state) {
+                    case "healthy":
+                        count = app.getApp().getTasksHealthy();
+                        break;
+                    case "unhealthy":
+                        count = app.getApp().getTasksUnhealthy();
+                        break;
+                    case "staged":
+                        count = app.getApp().getTasksStaged();
+                        break;
+                    case "running":
+                        count = app.getApp().getTasksRunning();
+                        break;
+                    default:
+                        count = 0;
+                }
 
-            switch (state) {
-                case "healthy":
-                    count = app.getApp().getTasksHealthy();
-                    break;
-                case "unhealthy":
-                    count = app.getApp().getTasksUnhealthy();
-                    break;
-                case "staged":
-                    count = app.getApp().getTasksStaged();
-                    break;
-                case "running":
-                    count = app.getApp().getTasksRunning();
-                    break;
-                default:
-                    count = 0;
+                if (count == app.getApp().getTasks().size()) {
+                    return;
+                }
             }
 
-            if (count == app.getApp().getTasks().size()) {
-                return;
-            }
             Thread.sleep(pause * 1000);
             time += pause;
         }

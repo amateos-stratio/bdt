@@ -32,7 +32,7 @@ public class MarathonApiClient extends BaseClient {
     public static MarathonUtils utils;
 
     public static MarathonApiClient getInstance(CommonG common) {
-        if (CLIENT == null) {
+        if (CLIENT == null || CLIENT.httpClient == null || CLIENT.httpClient.isClosed()) {
             CLIENT = new MarathonApiClient(common);
             utils = new MarathonUtils(CLIENT);
         }
