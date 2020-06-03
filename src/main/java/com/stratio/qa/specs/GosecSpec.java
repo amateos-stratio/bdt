@@ -116,7 +116,7 @@ public class GosecSpec extends BaseGSpec {
      */
     private void createResourceIfNotExist(String resource, String resourceId, String tenantOrig, String tenantLoginInfo, String endPoint, String loginInfo, boolean doesNotExist, String baseData, String type, DataTable modifications) throws Exception {
         Integer expectedStatusCreate = 201;
-        Integer expectedStatusDelete = 200;
+        Integer[] expectedStatusDelete = {200, 204};
         String endPointResource = "";
         String endPointPolicies = "/service/gosecmanagement" + ThreadProperty.get("API_POLICIES");
         String endPointPolicy = "/service/gosecmanagement" + ThreadProperty.get("API_POLICY");
@@ -125,10 +125,16 @@ public class GosecSpec extends BaseGSpec {
         List<List<String>> newModifications;
         newModifications = convertDataTableToModifiableList(modifications);
         Boolean addSourceType = false;
+        String managementBaasVersion = ThreadProperty.get("gosec-management-baas_version");
 
         if (tenantOrig != null) {
             // Set REST connection
             commonspec.setCCTConnection(tenantOrig, tenantLoginInfo);
+        }
+
+        if (managementBaasVersion != null) {
+            endPointPolicies = "/service/gosec-management-baas/management/policies";
+            endPointPolicy = "/service/gosec-management-baas/management/policy?pid=";
         }
 
         if (endPoint != null) {
@@ -142,6 +148,9 @@ public class GosecSpec extends BaseGSpec {
         } else {
             if (resource.equals("policy")) {
                 endPoint = "/service/gosecmanagement" + ThreadProperty.get("API_POLICY");
+                if (managementBaasVersion != null) {
+                    endPoint = "/service/gosec-management-baas/management/policy?pid=";
+                }
             } else {
                 if (resource.equals("user")) {
                     endPoint = "/service/gosecmanagement" + ThreadProperty.get("API_USER");
@@ -171,19 +180,28 @@ public class GosecSpec extends BaseGSpec {
             if (resource.equals("policy")) {
                 restSpec.sendRequestNoDataTable("GET", endPointPolicies, loginInfo, null, null);
                 if (commonspec.getResponse().getStatusCode() == 200) {
-                    commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.list[] | select (.name == \"" + resourceId + "\").id' | sed s/\\\"//g");
-                    String policyId = commonspec.getCommandResult().trim();
-                    if (!policyId.equals("")) {
-                        commonspec.getLogger().debug("PolicyId obtained: {}", policyId);
-                        endPointResource = endPointPolicy + policyId;
+                    if (managementBaasVersion != null) {
+                        commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.list[] | select (.name == \"" + resourceId + "\").pid' | sed s/\\\"//g");
+                        String policyId = commonspec.getCommandResult().trim();
+                        if (!policyId.equals("")) {
+                            commonspec.getLogger().debug("PolicyId obtained: {}", policyId);
+                            endPointResource = endPointPolicy + policyId;
+                        }
                     } else {
-                        commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.[] | select (.name == \"" + resourceId + "\").id' | sed s/\\\"//g");
-                        policyId = commonspec.getCommandResult().trim();
+                        commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.list[] | select (.name == \"" + resourceId + "\").id' | sed s/\\\"//g");
+                        String policyId = commonspec.getCommandResult().trim();
                         if (!policyId.equals("")) {
                             commonspec.getLogger().debug("PolicyId obtained: {}", policyId);
                             endPointResource = endPointPolicy + policyId;
                         } else {
-                            endPointResource = endPointPolicy + "thisIsANewPolicyId";
+                            commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.[] | select (.name == \"" + resourceId + "\").id' | sed s/\\\"//g");
+                            policyId = commonspec.getCommandResult().trim();
+                            if (!policyId.equals("")) {
+                                commonspec.getLogger().debug("PolicyId obtained: {}", policyId);
+                                endPointResource = endPointPolicy + policyId;
+                            } else {
+                                endPointResource = endPointPolicy + "thisIsANewPolicyId";
+                            }
                         }
                     }
                 }
@@ -230,7 +248,7 @@ public class GosecSpec extends BaseGSpec {
                         commonspec.getLogger().warn("Policy {} deleted", resourceId);
 
                         try {
-                            assertThat(commonspec.getResponse().getStatusCode()).isEqualTo(expectedStatusDelete);
+                            assertThat(commonspec.getResponse().getStatusCode()).isIn(expectedStatusDelete);
                         } catch (AssertionError e) {
                             commonspec.getLogger().warn("Error deleting Policy {}: {}", resourceId, commonspec.getResponse().getResponse());
                             throw e;
@@ -793,19 +811,34 @@ public class GosecSpec extends BaseGSpec {
         String endPointPolicies = "/service/gosecmanagement" + ThreadProperty.get("API_POLICIES");
         String endPoint = "";
         String endPointResource = "";
+        String managementBaasVersion = ThreadProperty.get("gosec-management-baas_version");
 
         if (tenantOrig != null) {
             // Set REST connection
             commonspec.setCCTConnection(tenantOrig, tenantLoginInfo);
         }
 
+        if (managementBaasVersion != null) {
+            endPointPolicies = "/service/gosec-management-baas/management/policies";
+            endPointPolicy = "/service/gosec-management-baas/management/policy?pid=";
+        }
+
         if (resource.equals("policy")) {
             endPoint = "/service/gosecmanagement" + ThreadProperty.get("API_POLICY");
+            if (managementBaasVersion != null) {
+                endPoint = "/service/gosec-management-baas/management/policy?pid=";
+            }
         } else {
             if (resource.equals("user")) {
                 endPoint = "/service/gosecmanagement" + ThreadProperty.get("API_USER");
+                if (managementBaasVersion != null) {
+                    endPoint = "/service/gosec-management-baas/management/user?uid=";
+                }
             } else {
                 endPoint = "/service/gosecmanagement" + ThreadProperty.get("API_GROUP");
+                if (managementBaasVersion != null) {
+                    endPoint = "/service/gosec-management-baas/management/group?gid=";
+                }
             }
             if (resource.equals("tenant")) {
                 endPoint = "/service/gosec-identities-daas/identities/tenants/";
@@ -818,19 +851,28 @@ public class GosecSpec extends BaseGSpec {
             if (resource.equals("policy")) {
                 restSpec.sendRequestNoDataTable("GET", endPointPolicies, loginInfo, null, null);
                 if (commonspec.getResponse().getStatusCode() == 200) {
-                    commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.list[] | select (.name == \"" + resourceId + "\").id' | sed s/\\\"//g");
-                    String policyId = commonspec.getCommandResult().trim();
-                    if (!policyId.equals("")) {
-                        commonspec.getLogger().debug("PolicyId obtained: {}", policyId);
-                        endPointResource = endPointPolicy + policyId;
+                    if (managementBaasVersion != null) {
+                        commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.list[] | select (.name == \"" + resourceId + "\").pid' | sed s/\\\"//g");
+                        String policyId = commonspec.getCommandResult().trim();
+                        if (!policyId.equals("")) {
+                            commonspec.getLogger().debug("PolicyId obtained: {}", policyId);
+                            endPointResource = endPointPolicy + policyId;
+                        }
                     } else {
-                        commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.[] | select (.name == \"" + resourceId + "\").id' | sed s/\\\"//g");
-                        policyId = commonspec.getCommandResult().trim();
+                        commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.list[] | select (.name == \"" + resourceId + "\").id' | sed s/\\\"//g");
+                        String policyId = commonspec.getCommandResult().trim();
                         if (!policyId.equals("")) {
                             commonspec.getLogger().debug("PolicyId obtained: {}", policyId);
                             endPointResource = endPointPolicy + policyId;
                         } else {
-                            endPointResource = endPointPolicy + "thisPolicyDoesNotExistId";
+                            commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.[] | select (.name == \"" + resourceId + "\").id' | sed s/\\\"//g");
+                            policyId = commonspec.getCommandResult().trim();
+                            if (!policyId.equals("")) {
+                                commonspec.getLogger().debug("PolicyId obtained: {}", policyId);
+                                endPointResource = endPointPolicy + policyId;
+                            } else {
+                                endPointResource = endPointPolicy + "thisPolicyDoesNotExistId";
+                            }
                         }
                     }
                 }
