@@ -602,12 +602,24 @@ public class GosecSpec extends BaseGSpec {
     public void getPolicyJson(String tag, String policyName, String tenantOrig, String tenantLoginInfo, String loginInfo, String envVar, String fileName) throws Exception {
         String endPoint = "/service/gosecmanagement/api/policy";
         String newEndPoint = "/service/gosecmanagement/api/policies";
+        String getEndPoint = "/service/gosecmanagement/api/policy/";
         String errorMessage = "api/policies";
         String errorMessage2 = "api/policy";
+        String managementBaasVersion = ThreadProperty.get("gosec-management-baas_version");
+
+        if (managementBaasVersion != null) {
+            endPoint = "/service/gosec-management-baas/management/policies";
+            getEndPoint = "/service/gosec-management-baas/management/policy?pid=";
+        }
 
         if (tag != null) {
-            endPoint = "/service/gosecmanagement/api/policy/tag";
-            newEndPoint = "/service/gosecmanagement/api/policies/tags";
+            if (managementBaasVersion != null) {
+                endPoint = "/service/gosec-management-baas/management/policies";
+                newEndPoint = "/service/gosec-management-baas/management/api/policies/tags";
+            } else {
+                endPoint = "/service/gosecmanagement/api/policy/tag";
+                newEndPoint = "/service/gosecmanagement/api/policies/tags";
+            }
             errorMessage = "api/policies/tags";
             errorMessage2 = "api/policy/tag";
         }
@@ -620,11 +632,19 @@ public class GosecSpec extends BaseGSpec {
         assertThat(commonspec.getRestHost().isEmpty() || commonspec.getRestPort().isEmpty());
         restSpec.sendRequestNoDataTable("GET", endPoint, null, null, null);
         if (commonspec.getResponse().getStatusCode() == 200) {
-            commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.list[] | select (.name == \"" + policyName + "\").id' | sed s/\\\"//g");
-            if (commonspec.getCommandResult().trim().equals("")) {
-                commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.[] | select (.name == \"" + policyName + "\").id' | sed s/\\\"//g");
+            if (managementBaasVersion != null) {
+                commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.list[] | select (.name == \"" + policyName + "\").pid' | sed s/\\\"//g");
+            } else {
+                commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.list[] | select (.name == \"" + policyName + "\").id' | sed s/\\\"//g");
+                if (commonspec.getCommandResult().trim().equals("")) {
+                    commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.[] | select (.name == \"" + policyName + "\").id' | sed s/\\\"//g");
+                }
             }
-            restSpec.sendRequestNoDataTable("GET", "/service/gosecmanagement/api/policy/" + commonspec.getCommandResult(), null, null, null);
+            if (commonspec.getCommandResult().equals("")) {
+                fail("Policy does not exist -> " + policyName);
+            }
+
+            restSpec.sendRequestNoDataTable("GET", getEndPoint + commonspec.getCommandResult(), null, null, null);
 
             if (envVar != null) {
                 ThreadProperty.set(envVar, commonspec.getResponse().getResponse());
