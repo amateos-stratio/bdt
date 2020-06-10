@@ -331,6 +331,8 @@ public class GosecSpec extends BaseGSpec {
                         if (!policyId.equals("")) {
                             commonspec.getLogger().debug("PolicyId obtained: {}", policyId);
                             endPointResource = endPointPolicy + policyId;
+                        } else {
+                            endPointResource = endPointPolicy + "thisPolicyDoesNotExistId";
                         }
                     } else {
                         commonspec.runLocalCommand("echo '" + commonspec.getResponse().getResponse() + "' | jq '.list[] | select (.name == \"" + resourceId + "\").id' | sed s/\\\"//g");

@@ -4,6 +4,7 @@ Only listing significant user-visible, not internal code cleanups and minor bug 
 
 ## 0.18.0 (upcoming)
 
+* [GS-2033] Fix delete policy with baas if it does not exist
 * [GS-2033] Added BaaaS endpoint creating policy and updating resources
 * [QATM-3284] Fix loop replacement in datatables
 * Add base service clients and models
