@@ -4,7 +4,7 @@ Only listing significant user-visible, not internal code cleanups and minor bug 
 
 ## 0.19.0 (upcoming)
 
-* Pending changelog
+* [GS-2354] Add feature to convert provided date into timestamp
 
 ## 0.18.0 (August 04, 2020)
 

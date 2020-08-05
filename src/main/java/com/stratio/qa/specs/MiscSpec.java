@@ -22,11 +22,11 @@ import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
 import io.cucumber.datatable.DataTable;
 import org.assertj.core.api.Assertions;
-import org.assertj.core.api.Fail;
 import org.hjson.JsonArray;
 import org.hjson.JsonValue;
 
 import java.lang.reflect.InvocationTargetException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -355,4 +355,42 @@ public class MiscSpec extends BaseGSpec {
             }
         }
     }
+
+    /**
+     * Convert provided date into timestamp
+     *
+     * @param date     : provided date (2020-08-08, 2020-08-08 10:10:10, etc)
+     * @param format   : provided format (yyyy-MM-dd, yyyy-MM-dd HH:mm:ss, etc) - Format should match with provided date/time
+     * @param timezone : Timezone GMT,GMT+1,GMT-1... (OPTIONAL) if not provided, UTC (GMT)
+     * @param envVar   : environment variable where timestamp is saved
+     * @throws Exception
+     */
+    @When("^I convert date '(.+?)' in format '(.+?)'( with timezone '(.+?)')? into timestamp and save the value in environment variable '(.+?)'$")
+    public void convertDateToTimestamp(String date, String format, String timezone, String envVar) throws Exception {
+
+
+        SimpleDateFormat isoFormat = new SimpleDateFormat(format);
+        if (timezone != null) {
+            isoFormat.setTimeZone(TimeZone.getTimeZone(timezone));
+        } else {
+            timezone = "UTC";
+            isoFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
+        }
+        try {
+            Date d = isoFormat.parse(date);
+            GregorianCalendar calendar = new GregorianCalendar(TimeZone.getTimeZone("Europe/Madrid"));
+            calendar.setTime(d);
+            ThreadProperty.set(envVar, Long.toString(calendar.getTimeInMillis()));
+            commonspec.getLogger().warn("Your date in timestamp: {} with timezone: {}", calendar.getTimeInMillis(), timezone);
+        } catch (AssertionError e) {
+            commonspec.getLogger().error("Error converting date {}, check date and format", date);
+            throw e;
+        }
+    }
 }
+
+
+
+
+
+
