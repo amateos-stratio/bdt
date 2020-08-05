@@ -412,7 +412,7 @@ public class MiscSpec extends BaseGSpec {
         DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
         Date targetTime = new Date(); //now
         targetTime = DateUtils.addMinutes(targetTime, addMinuteTime); //add minute
-        ThreadProperty.set(envVar, targetTime.toString());
+        ThreadProperty.set(envVar, dateFormat.format(targetTime));
         commonspec.getLogger().debug("Date adding {} minutes : {}", addMinuteTime, dateFormat.format(targetTime));
     }
 
