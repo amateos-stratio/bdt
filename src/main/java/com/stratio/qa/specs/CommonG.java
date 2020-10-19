@@ -19,9 +19,11 @@ package com.stratio.qa.specs;
 import com.datastax.driver.core.ColumnDefinitions;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
@@ -70,6 +72,8 @@ import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -2207,6 +2211,24 @@ public class CommonG {
         // save it as YAML
         String jsonAsYaml = new YAMLMapper().writeValueAsString(jsonNodeTree);
         return jsonAsYaml;
+    }
+
+    /**
+     * Method to convert one yaml to json file - for operator test
+     * <p>
+     * File will be placed on path /target/test-classes
+     */
+
+    public String convertYamlToJson(String yaml) {
+        try {
+            ObjectMapper yamlReader = new ObjectMapper(new YAMLFactory());
+            Object obj = yamlReader.readValue(retrieveData(yaml, "yaml"), Object.class);
+            ObjectMapper jsonWriter = new ObjectMapper();
+            return jsonWriter.writerWithDefaultPrettyPrinter().writeValueAsString(obj);
+        } catch (IOException ex) {
+            logger.error("Yaml file can't be converted to Json file", ex);
+        }
+        return null;
     }
 
     /**

@@ -228,4 +228,29 @@ public class FileSpec extends BaseGSpec {
 
         Assertions.assertThat(new File(absolutePathFile).isFile());
     }
+
+    @When("^I convert the yaml file '(.+?)' to json file '(.+?)'$")
+    public void convertYamlToJson(String fileToConvert, String fileName) throws Exception {
+
+        // Retrieve data
+        String retrievedData = commonspec.convertYamlToJson(fileToConvert);
+
+        // Create file (temporary) and set path to be accessible within test
+        File tempDirectory = new File(String.valueOf(System.getProperty("user.dir") + "/target/test-classes/"));
+        String absolutePathFile = tempDirectory.getAbsolutePath() + "/" + fileName;
+        commonspec.getLogger().debug("Creating file {} in 'target/test-classes'", absolutePathFile);
+        // Note that this Writer will delete the file if it exists
+        Writer out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(absolutePathFile), "UTF-8"));
+        try {
+            out.write(retrievedData);
+        } catch (Exception e) {
+            commonspec.getLogger().error("Custom file {} hasn't been created:\n{}", absolutePathFile, e.toString());
+            throw new RuntimeException("Custom file {} hasn't been created");
+        } finally {
+            out.close();
+        }
+
+        Assertions.assertThat(new File(absolutePathFile).isFile());
+    }
 }
+

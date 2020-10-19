@@ -159,6 +159,7 @@
                         <exclude>**/*.feature</exclude>
                         <exclude>**/*.conf</exclude>
                         <exclude>**/*.sh</exclude>
+                        <exclude>**/*.yml</exclude>
                     </excludes>
                 </configuration>
             </plugin>
