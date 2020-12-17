@@ -4,6 +4,7 @@ Only listing significant user-visible, not internal code cleanups and minor bug 
 
 ## 0.21.0 (upcoming)
 
+* [GS-3051] Fix check certificate creating federated users
 * Kubernetes support
 
 ## 0.20.0 (December 17, 2020)
